@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Questions - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #004b23;
+            --secondary-color: #ffffff;
+            --accent-color: #003d1c;
+            --light-gray: #f8f9fa;
+            --border-radius: 15px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand img {
+            height: 45px;
+            margin-right: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand img:hover {
+            transform: scale(1.05);
+        }
+
+        .navbar-brand span {
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .nav-link {
+            color: var(--secondary-color) !important;
+            margin: 0 10px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            color: #ffd700 !important;
+            font-weight: bold;
+        }
+
+        .nav-link i {
+            margin-right: 5px;
+        }
+
+        
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .subject-selector {
+            background: var(--secondary-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .subject-selector h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .question-form {
+            background: var(--secondary-color);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .question-form h3 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-control, .form-select {
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0,75,35,0.25);
+        }
+
+        .input-group-text {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            min-width: 45px;
+            justify-content: center;
+        }
+
+        .options-container {
+            background-color: var(--light-gray);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin: 1.5rem 0;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .invalid-feedback {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+                margin-top: 20px;
+            }
+
+            .subject-selector, .question-form {
+                padding: 1.5rem;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .subject-selector, .question-form {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .device-block {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .device-block {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+        }   
+    </style>
+</head>
+<body>
+
+    <script>
+        // Check if user is coming from RFID login
+        if (!sessionStorage.getItem('rfidAuthenticated')) {
+            window.location.href = '../../admin_rfid.html';
+        }
+
+        function logout() {
+            sessionStorage.removeItem('rfidAuthenticated');
+            window.location.href = '../../admin_rfid.html';
+        }
+    </script>
+
+
+<div class="device-block">
+    <h1>⚠️ Device Not Supported</h1>
+    <p>Please use a desktop computer view to access the admin dashboard.</p>
+    <p>This restriction is in place to ensure secure access to administrative functions.</p>
+</div>
+
+    <!-- Success Alert -->
+    <div class="alert alert-success alert-dismissible fade show" id="successAlert" role="alert" style="display: none;">
+        <i class="fas fa-check-circle me-2"></i>
+        <span id="successMessage">Question added successfully!</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" role="alert" style="display: none;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span id="errorMessage">Please fill in all required fields.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="../../asset/cdm_logo.png" alt="Logo">
+                <span>CDM Admin Panel</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="add_question.html">
+                            <i class="fas fa-plus-circle"></i> Add Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="update_question.html">
+                            <i class="fas fa-edit"></i> Update Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button onclick="logout()" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="subject-selector">
+            <h3><i class="fas fa-book me-2"></i>Select Subject</h3>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="subject" class="form-label">Subject</label>
+                    <select class="form-select" id="subject" required>
+                        <option value="">Choose subject...</option>
+                    </select>
+                    <div class="invalid-feedback">Please select a subject</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="questionNumber" class="form-label">Question Number</label>
+                    <input type="number" class="form-control" id="questionNumber" required min="1" readonly>
+                </div>
+            </div>
+        </div>
+
+        <div class="question-form">
+            <h3><i class="fas fa-question-circle me-2"></i>Add Question</h3>
+            <form id="addQuestionForm" novalidate>
+                <div class="mb-4">
+                    <label for="questionText" class="form-label">Question</label>
+                    <textarea class="form-control" id="questionText" rows="3" required placeholder="Enter your question here..."></textarea>
+                    <div class="invalid-feedback">Please enter a question</div>
+                </div>
+
+                <div class="options-container">
+                    <label class="form-label fw-bold">Options</label>
+                    <div class="option-group">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">A</span>
+                            <input type="text" class="form-control" id="optionA" required placeholder="Enter option A">
+                            <div class="invalid-feedback">Please enter option A</div>
+                        </div>
+                    </div>
+                    <div class="option-group">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">B</span>
+                            <input type="text" class="form-control" id="optionB" required placeholder="Enter option B">
+                            <div class="invalid-feedback">Please enter option B</div>
+                        </div>
+                    </div>
+                    <div class="option-group">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">C</span>
+                            <input type="text" class="form-control" id="optionC" required placeholder="Enter option C">
+                            <div class="invalid-feedback">Please enter option C</div>
+                        </div>
+                    </div>
+                    <div class="option-group">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">D</span>
+                            <input type="text" class="form-control" id="optionD" required placeholder="Enter option D">
+                            <div class="invalid-feedback">Please enter option D</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="correct-answer mb-4">
+                    <label for="correctAnswer" class="form-label">Correct Answer</label>
+                    <select class="form-select" id="correctAnswer" required>
+                        <option value="">Select correct answer...</option>
+                        <option value="A">Option A</option>
+                        <option value="B">Option B</option>
+                        <option value="C">Option C</option>
+                        <option value="D">Option D</option>
+                    </select>
+                    <div class="invalid-feedback">Please select the correct answer</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3">
+                    <button type="button" class="btn btn-secondary" id="clearForm">
+                        <i class="fas fa-eraser me-2"></i>Clear Form
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Question
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { db } from '../firebase_config.js';
+        import { collection, addDoc, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const subjectSelect = document.getElementById('subject');
+        const questionNumberInput = document.getElementById('questionNumber');
+        const form = document.getElementById('addQuestionForm');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Load subjects from Firestore
+        async function loadSubjects() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "subjectlist"));
+                subjectSelect.innerHTML = '<option value="">Choose subject...</option>';
+                querySnapshot.forEach((doc) => {
+                    const subject = doc.data();
+                    subjectSelect.innerHTML += `<option value="${subject.name.toLowerCase()}">${subject.name}</option>`;
+                });
+            } catch (error) {
+                console.error("Error loading subjects: ", error);
+                showAlert('error', 'Error loading subjects');
+            }
+        }
+
+        // Load subjects when page loads
+        loadSubjects();
+
+        // Validate subject selection before proceeding
+        subjectSelect.addEventListener('change', async () => {
+            const subject = subjectSelect.value;
+            if (!subject) {
+                subjectSelect.classList.add('is-invalid');
+                questionNumberInput.value = '';
+                return;
+            }
+            
+            subjectSelect.classList.remove('is-invalid');
+            const nextQuestionNumber = await getNextQuestionNumber(subject);
+            questionNumberInput.value = nextQuestionNumber;
+        });
+
+        async function getNextQuestionNumber(subject) {
+            const docRef = doc(db, "EntranceExamQuestion", subject);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const questionNumbers = Object.keys(data).map(Number);
+                
+                // Find the first missing number starting from 1
+                let nextNumber = 1;
+                while (questionNumbers.includes(nextNumber)) {
+                    nextNumber++;
+                }
+                
+                // Check for any gaps in the sequence
+                for (let i = 1; i < nextNumber; i++) {
+                    if (!questionNumbers.includes(i)) {
+                        return i; // Return the first gap found
+                    }
+                }
+                
+                return nextNumber;
+            } else {
+                return 1;
+            }
+        }
+
+        function showAlert(type, message) {
+            const alert = type === 'success' ? successAlert : errorAlert;
+            const messageElement = type === 'success' ? successMessage : errorMessage;
+            messageElement.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function validateForm() {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            let isValid = true;
+            
+            // First validate subject
+            if (!subjectSelect.value) {
+                subjectSelect.classList.add('is-invalid');
+                isValid = false;
+                showAlert('error', 'Please select a subject first');
+                return false;
+            }
+            
+            inputs.forEach(input => {
+                if (input.required && !input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            return isValid;
+        }
+
+        document.getElementById('addQuestionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const subject = document.getElementById('subject').value;
+            const questionNumber = parseInt(document.getElementById('questionNumber').value);
+            const questionText = document.getElementById('questionText').value;
+            const optionA = document.getElementById('optionA').value;
+            const optionB = document.getElementById('optionB').value;
+            const optionC = document.getElementById('optionC').value;
+            const optionD = document.getElementById('optionD').value;
+            const correctAnswer = document.getElementById('correctAnswer').value;
+
+            try {
+                const docRef = doc(db, "EntranceExamQuestion", subject);
+                const docSnap = await getDoc(docRef);
+                
+                let existingData = {};
+                if (docSnap.exists()) {
+                    existingData = docSnap.data();
+                }
+
+                const newData = {
+                    ...existingData,
+                    [questionNumber]: {
+                        question: questionText,
+                        options: {
+                            A: optionA,
+                            B: optionB,
+                            C: optionC,
+                            D: optionD
+                        },
+                        correctAnswer: correctAnswer
+                    }
+                };
+
+                await setDoc(docRef, newData);
+
+                showAlert('success', 'Question added successfully!');
+                form.reset();
+                subjectSelect.value = '';
+                questionNumberInput.value = '';
+                const inputs = form.querySelectorAll('.is-invalid');
+                inputs.forEach(input => input.classList.remove('is-invalid'));
+            } catch (error) {
+                console.error("Error adding question: ", error);
+                showAlert('error', 'Error adding question. Please try again.');
+            }
+        });
+
+        function clearForm() {
+            form.reset();
+            subjectSelect.value = '';
+            questionNumberInput.value = '';
+            const inputs = form.querySelectorAll('.is-invalid');
+            inputs.forEach(input => input.classList.remove('is-invalid'));
+        }
+
+        document.getElementById('clearForm').addEventListener('click', clearForm);
+    </script>
+</body>
+</html>

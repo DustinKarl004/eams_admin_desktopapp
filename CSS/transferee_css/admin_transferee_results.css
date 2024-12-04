@@ -1,0 +1,353 @@
+:root {
+    --primary-color: #006400;
+    --secondary-color: #FFFFFF;
+    --accent-color: #008000;
+    --background-color: #F5F5F5;
+    --text-color: #333333;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Roboto', Arial, sans-serif;
+    line-height: 1.6;
+}
+
+.table-container {
+    margin-top: 2rem;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 100, 0, 0.1);
+    padding: 1.5rem;
+    overflow: hidden;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    transition: all 0.3s ease;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(0, 255, 0, 0.1);
+}
+
+.btn-edit, .btn-cancel, .btn-confirm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.hidden {
+    display: none;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Modal styles */
+.modal-content {
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 100, 0, 0.3);
+}
+
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    padding: 1rem 1.5rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+}
+
+.form-control {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+}
+
+.form-control:hover, .form-control:focus {
+    box-shadow: 0 0 8px rgba(0, 100, 0, 0.5);
+    border-color: var(--accent-color);
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border: none;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+
+}
+
+/* Search bar styles */
+.search-container {
+    margin-bottom: 2rem;
+    width: 30%;
+    margin-left: 5%;
+    margin-right: auto;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 30px;
+    padding: 5px 20px;
+    box-shadow: 0 4px 15px rgba(0, 128, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.search-form:hover, .search-form:focus-within {
+    box-shadow: 0 6px 20px rgba(0, 128, 0, 0.25);
+    transform: translateY(-2px);
+}
+
+.search-form input[type="text"] {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    padding: 12px 15px;
+    font-size: 16px;
+    color: #006400;
+    background-color: transparent;
+}
+
+.search-form input[type="text"]::placeholder {
+    color: #aaa;
+    transition: color 0.3s ease;
+}
+
+.search-form input[type="text"]:focus::placeholder {
+    color: #006400;
+}
+
+.search-form::before {
+    content: '\f002';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: #006400;
+    font-size: 18px;
+    margin-right: 10px;
+}
+
+/* Total results count styles */
+.total-results-badge {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.total-results-badge i {
+    margin-right: 0.5rem;
+    color: var(--secondary-color);
+}
+
+
+/* Add Examinee Modal */
+#addResultModal .modal-content {
+    background-color: #f9f9f9;
+}
+
+#addResultModal .modal-header {
+    background-color: var(--primary-color);
+}
+
+#addResultModal .modal-title {
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+#addResultModal .form-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+#addResultModal .btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+#resultModal .btn-primary:hover {
+    background-color: #006b00;
+    border-color: #006b00;
+}
+
+/* Update Examinee Modal */
+#updateResultModal .modal-content {
+    background-color: #f0f8f0;
+}
+
+#updateResultModal .modal-header {
+    background-color: #FCCD2A;
+}
+
+#updateResultModal .modal-title {
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+#updateResultModal .form-label {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+#updateResultModal .btn-primary {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+#updateResultModal .btn-primary:hover {
+    background-color: #886704;
+    border-color: #886704;
+    color: #fff;
+}
+
+/* Delete Confirmation Modal */
+#deleteConfirmModal .modal-content {
+    background-color: #fff0f0;
+}
+
+#deleteConfirmModal .modal-header {
+    background-color: #dc3545;
+    color: white;
+}
+
+#deleteConfirmModal .modal-title {
+    font-weight: bold;
+}
+
+#deleteConfirmModal .modal-body {
+    font-size: 1.1rem;
+    color: #333;
+}
+
+#deleteConfirmModal .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#deleteConfirmModal .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+#deleteConfirmModal .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+#deleteConfirmModal .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+
+#addResultBtn {
+    background-color: #006b00;
+    border-color: #006b00;
+
+}
+
+#addResultBtn:hover {
+    background-color: #044904;
+    border-color: #044904;
+    color: #fff;
+}
+/* Update and Delete Buttons */
+.btn-sm.btn-primary,
+.btn-sm.btn-danger {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+    transition: all 0.3s ease;
+}
+
+.btn-sm.btn-primary {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.btn-sm.btn-primary:hover {
+    background-color: #886704;
+    border-color: #886704;
+    color: #fff;
+}
+
+.btn-sm.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-sm.btn-danger:hover {
+    background-color: #3d070c;
+    border-color: #3d070c;
+    color: #fff;
+}
+
+/* Add some spacing between buttons */
+.btn-sm.btn-primary + .btn-sm.btn-danger {
+    margin-left: 0.5rem;
+}
+
+/* Optional: Add a subtle shadow effect on hover */
+.btn-sm.btn-primary:hover,
+.btn-sm.btn-danger:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}

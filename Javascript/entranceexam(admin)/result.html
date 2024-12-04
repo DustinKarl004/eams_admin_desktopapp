@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #004b23;
+            --secondary-color: #ffffff;
+            --accent-color: #003d1c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .navbar-brand span {
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        .nav-link {
+            color: var(--secondary-color) !important;
+            margin: 0 10px;
+        }
+
+        .nav-link.active {
+            color: #ffd700 !important;
+            font-weight: bold;
+        }
+
+        .nav-link i {
+            margin-right: 5px;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .result-header {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .score {
+            font-size: 1.2em;
+            color: var(--primary-color);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            border-radius: 25px;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            width: 100%;
+            max-width: 400px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+        }
+
+        .device-block {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .category-tabs {
+            margin-bottom: 30px;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--primary-color) !important;
+            font-weight: 500;
+            border: none;
+            padding: 10px 20px;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white !important;
+            border-radius: 5px;
+        }
+
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        .status-pass {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-waiting {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .confirmed-result {
+            background-color: #17a2b8;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @media (max-width: 1024px) {
+            .device-block {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .container {
+                display: none;
+            }
+
+            .navbar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        // Check if user is coming from RFID login
+        if (!sessionStorage.getItem('rfidAuthenticated')) {
+            window.location.href = '../../admin_rfid.html';
+        }
+
+        function logout() {
+            sessionStorage.removeItem('rfidAuthenticated');
+            window.location.href = '../../admin_rfid.html';
+        }
+    </script>
+
+
+    <div class="device-block">
+        <h1>⚠️ Device Not Supported</h1>
+        <p>Please use a desktop computer view to access the admin dashboard.</p>
+        <p>This restriction is in place to ensure secure access to administrative functions.</p>
+    </div>
+        
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="../../asset/cdm_logo.png" alt="Logo">
+                <span>CDM Admin Panel</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="add_question.html">
+                            <i class="fas fa-plus-circle"></i> Add Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="update_question.html">
+                            <i class="fas fa-edit"></i> Update Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button onclick="logout()" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by email or name...">
+        </div>
+
+        <ul class="nav nav-tabs category-tabs" id="resultTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="freshmen-tab" data-bs-toggle="tab" data-bs-target="#freshmen" type="button" role="tab">
+                    <i class="fas fa-user-graduate"></i> Freshmen
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transferee-tab" data-bs-toggle="tab" data-bs-target="#transferee" type="button" role="tab">
+                    <i class="fas fa-exchange-alt"></i> Transferee
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="resultTabsContent">
+            <div class="tab-pane fade show active" id="freshmen" role="tabpanel">
+                <h4 class="mb-4">Freshmen Results</h4>
+                <div id="freshmen-results">
+                    <div class="loading-spinner">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="transferee" role="tabpanel">
+                <h4 class="mb-4">Transferee Results</h4>
+                <div id="transferee-results">
+                    <div class="loading-spinner">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { db } from '../firebase_config.js';
+        import { collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        let allResults = [];
+
+        async function loadResults() {
+            try {
+                const examSnapshot = await getDocs(collection(db, "EntranceExam"));
+                
+                if (examSnapshot.empty) {
+                    document.getElementById('freshmen-results').innerHTML = `
+                        <div class="alert alert-info">No exam results found.</div>
+                    `;
+                    document.getElementById('transferee-results').innerHTML = `
+                        <div class="alert alert-info">No exam results found.</div>
+                    `;
+                    return;
+                }
+
+                allResults = [];
+
+                for (const examDoc of examSnapshot.docs) {
+                    const email = examDoc.id;
+                    const examData = examDoc.data();
+                    
+                    let totalCorrect = 0;
+                    let totalQuestions = 0;
+
+                    // Process each subject
+                    for (const [subject, answers] of Object.entries(examData)) {
+                        if (subject === 'completedSubjects') continue;
+
+                        // Get correct answers from question bank
+                        const questionDoc = await getDoc(doc(db, "EntranceExamQuestion", subject));
+                        if (questionDoc.exists()) {
+                            const questions = questionDoc.data();
+                            
+                            // Compare answers
+                            for (const [qNum, userAnswer] of Object.entries(answers)) {
+                                if (questions[qNum] && questions[qNum].correctAnswer === userAnswer) {
+                                    totalCorrect++;
+                                }
+                                totalQuestions++;
+                            }
+                        }
+                    }
+
+                    const percentage = ((totalCorrect / totalQuestions) * 100).toFixed(2);
+
+                    // Try to get applicant info
+                    let applicantType = '';
+                    let applicantDoc = await getDoc(doc(db, "freshmen_applicant_form", email));
+                    if (applicantDoc.exists()) {
+                        applicantType = 'freshmen';
+                    } else {
+                        applicantDoc = await getDoc(doc(db, "transferee_applicant_form", email));
+                        if (applicantDoc.exists()) {
+                            applicantType = 'transferee';
+                        }
+                    }
+
+                    let fullName = '';
+                    if (applicantDoc.exists()) {
+                        const applicantInfo = applicantDoc.data().applicant_info;
+                        const lastName = applicantInfo.last_name;
+                        const firstName = applicantInfo.first_name;
+                        const middleName = applicantInfo.middle_name;
+
+                        fullName = middleName && !['n/a', 'N/A'].includes(middleName) 
+                            ? `${lastName}, ${firstName} ${middleName}`
+                            : `${lastName}, ${firstName}`;
+                    }
+
+                    // Check for confirmed result in respective collections
+                    let hasConfirmedResult = false;
+                    let confirmedResultsCollection;
+                    
+                    if (applicantType === 'freshmen') {
+                        confirmedResultsCollection = collection(db, "freshmen_examinees_result");
+                    } else if (applicantType === 'transferee') {
+                        confirmedResultsCollection = collection(db, "transferee_examinees_result");
+                    }
+
+                    if (confirmedResultsCollection) {
+                        const confirmedResultsQuery = query(confirmedResultsCollection, where("email", "==", email));
+                        const confirmedResultsSnapshot = await getDocs(confirmedResultsQuery);
+                        hasConfirmedResult = !confirmedResultsSnapshot.empty;
+                    }
+                    
+                    allResults.push({
+                        email,
+                        fullName,
+                        totalCorrect,
+                        totalQuestions,
+                        percentage,
+                        applicantType,
+                        status: parseFloat(percentage) >= 50 ? 'Passed' : 'Waiting List',
+                        hasConfirmedResult
+                    });
+                }
+
+                displayResults(allResults);
+
+            } catch (error) {
+                console.error("Error loading results:", error);
+                document.getElementById('freshmen-results').innerHTML = `
+                    <div class="alert alert-danger">Error loading results. Please try again.</div>
+                `;
+                document.getElementById('transferee-results').innerHTML = `
+                    <div class="alert alert-danger">Error loading results. Please try again.</div>
+                `;
+            }
+        }
+
+        function displayResults(results) {
+            const freshmenResults = results.filter(r => r.applicantType === 'freshmen');
+            const transfereeResults = results.filter(r => r.applicantType === 'transferee');
+
+            displayCategoryResults(freshmenResults, 'freshmen-results');
+            displayCategoryResults(transfereeResults, 'transferee-results');
+        }
+
+        function displayCategoryResults(results, containerId) {
+            const container = document.getElementById(containerId);
+            
+            // Sort by status (Passed first) and then by percentage (highest first)
+            results.sort((a, b) => {
+                if (a.status === b.status) {
+                    return b.percentage - a.percentage;
+                }
+                return a.status === 'Passed' ? -1 : 1;
+            });
+
+            let resultsHTML = '';
+
+            results.forEach(result => {
+                resultsHTML += `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h5>
+                                <i class="fas fa-user-graduate me-2"></i>${result.fullName}
+                                <span class="status-badge ${result.status === 'Passed' ? 'status-pass' : 'status-waiting'}">
+                                    ${result.status}
+                                </span>
+                                ${result.hasConfirmedResult ? `
+                                    <span class="confirmed-result">
+                                        <i class="fas fa-check-circle"></i> Result Confirmed
+                                    </span>
+                                ` : ''}
+                            </h5>
+                            <small class="text-muted">${result.email}</small>
+                        </div>
+                        <div class="score">
+                            <i class="fas fa-chart-bar"></i>
+                            Score: ${result.totalCorrect}/${result.totalQuestions} 
+                            <span class="badge ${result.percentage >= 50 ? 'bg-success' : 'bg-danger'}">
+                                ${result.percentage}%
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (!resultsHTML) {
+                resultsHTML = `<div class="alert alert-info">No results found for this category.</div>`;
+            }
+
+            container.innerHTML = resultsHTML;
+        }
+
+        function handleSearch(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            const filteredResults = allResults.filter(result => 
+                result.email.toLowerCase().includes(searchTerm) ||
+                result.fullName.toLowerCase().includes(searchTerm)
+            );
+            displayResults(filteredResults);
+        }
+
+        // Set up search functionality
+        document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+        // Load results when page loads
+        loadResults();
+    </script>

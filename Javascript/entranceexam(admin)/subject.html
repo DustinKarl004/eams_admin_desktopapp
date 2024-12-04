@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #004b23;
+            --secondary-color: #ffffff;
+            --accent-color: #003d1c;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .navbar-brand span {
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        .nav-link {
+            color: var(--secondary-color) !important;
+            margin: 0 10px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            color: #ffd700 !important;
+            font-weight: bold;
+        }
+
+        
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+
+        .nav-link i {
+            margin-right: 5px;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: var(--secondary-color);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .subject-container {
+            padding: 2rem;
+            position: relative;
+        }
+
+        .subject-card {
+            background: var(--secondary-color);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .btn-action {
+            margin: 0 5px;
+            border-radius: 20px;
+            padding: 8px 15px;
+        }
+
+        .animated {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* Loading Spinner */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+            border: 5px solid;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Success Alert */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Enhanced Modal Styling */
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+
+        .modal-header {
+            background: var(--success-color);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        #editSubjectModal .modal-header {
+            background: var(--warning-color);
+            color: black;
+        }
+
+        .modal-footer {
+            border-top: none;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 10px;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: none;
+        }
+
+        /* Confirmation Dialog */
+        .confirmation-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .confirmation-dialog h4 {
+            color: var(--danger-color);
+            margin-bottom: 15px;
+        }
+
+        .confirmation-dialog .btn-group {
+            margin-top: 20px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .validation-message {
+            color: var(--danger-color);
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        
+        .device-block {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .device-block {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .container {
+                display: none;
+            }
+
+            .navbar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <script>
+        // Check if user is coming from RFID login
+        if (!sessionStorage.getItem('rfidAuthenticated')) {
+            window.location.href = '../../admin_rfid.html';
+        }
+
+        function logout() {
+            sessionStorage.removeItem('rfidAuthenticated');
+            window.location.href = '../../admin_rfid.html';
+        }
+    </script>
+
+
+<div class="device-block">
+    <h1>⚠️ Device Not Supported</h1>
+    <p>Please use a desktop computer view to access the admin dashboard.</p>
+    <p>This restriction is in place to ensure secure access to administrative functions.</p>
+</div>
+        
+    <!-- Success Alert -->
+    <div class="alert alert-success alert-dismissible fade show" id="successAlert" role="alert" style="display: none;">
+        <i class="fas fa-check-circle me-2"></i>
+        <span id="successMessage"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="alert alert-danger alert-dismissible fade show" id="errorAlert" role="alert" style="display: none;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span id="errorMessage"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Confirmation Dialog -->
+    <div class="overlay" id="overlay"></div>
+    <div class="confirmation-dialog" id="confirmationDialog">
+        <h4><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h4>
+        <p>Are you sure you want to delete this subject?</p>
+        <div class="btn-group">
+            <button class="btn btn-secondary rounded-pill me-2" onclick="hideConfirmDialog()">Cancel</button>
+            <button class="btn btn-danger rounded-pill" id="confirmDeleteBtn">Delete</button>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="../../asset/cdm_logo.png" alt="Logo">
+                <span>CDM Admin Panel</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="add_question.html">
+                            <i class="fas fa-plus-circle"></i> Add Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="update_question.html">
+                            <i class="fas fa-edit"></i> Update Questions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button onclick="logout()" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="welcome-section animated">
+        <h1><i class="fas fa-book-open"></i> Subject Management</h1>
+        <p>Add, update, and manage examination subjects</p>
+    </div>
+
+    <div class="container subject-container">
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col">
+                <button class="btn btn-success rounded-pill" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
+                    <i class="fas fa-plus"></i> Add New Subject
+                </button>
+            </div>
+        </div>
+
+        <div id="subjectsList" class="row">
+            <!-- Subjects will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Add Subject Modal -->
+    <div class="modal fade" id="addSubjectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Add New Subject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSubjectForm">
+                        <div class="mb-3">
+                            <label for="subjectName" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" id="subjectName" required>
+                            <div class="validation-message" id="addNameValidation">Subject name is required</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subjectDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="subjectDescription" rows="3" required></textarea>
+                            <div class="validation-message" id="addDescValidation">Description is required</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success rounded-pill" onclick="validateAndAddSubject()">Add Subject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Subject Modal -->
+    <div class="modal fade" id="editSubjectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Subject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editSubjectForm">
+                        <input type="hidden" id="editSubjectId">
+                        <div class="mb-3">
+                            <label for="editSubjectName" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" id="editSubjectName" required>
+                            <div class="validation-message" id="editNameValidation">Subject name is required</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSubjectDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editSubjectDescription" rows="3" required></textarea>
+                            <div class="validation-message" id="editDescValidation">Description is required</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning rounded-pill text-dark" onclick="validateAndUpdateSubject()">Update Subject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { db } from '../firebase_config.js';
+        import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        function showAlert(type, message) {
+            const alert = type === 'success' ? successAlert : errorAlert;
+            const messageElement = type === 'success' ? successMessage : errorMessage;
+            messageElement.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        window.validateAndAddSubject = function() {
+            const name = document.getElementById('subjectName').value.trim();
+            const description = document.getElementById('subjectDescription').value.trim();
+            const nameValidation = document.getElementById('addNameValidation');
+            const descValidation = document.getElementById('addDescValidation');
+            
+            nameValidation.style.display = !name ? 'block' : 'none';
+            descValidation.style.display = !description ? 'block' : 'none';
+
+            if (name && description) {
+                addSubject();
+            }
+        };
+
+        window.addSubject = async function() {
+            const name = document.getElementById('subjectName').value;
+            const description = document.getElementById('subjectDescription').value;
+
+            try {
+                await addDoc(collection(db, "subjectlist"), {
+                    name: name,
+                    description: description
+                });
+                
+                bootstrap.Modal.getInstance(document.getElementById('addSubjectModal')).hide();
+                document.getElementById('addSubjectForm').reset();
+                showAlert('success', 'Subject added successfully!');
+                loadSubjects();
+            } catch (error) {
+                console.error("Error adding subject: ", error);
+                showAlert('error', 'Error adding subject');
+            }
+        };
+
+        window.editSubject = function(id, name, description) {
+            document.getElementById('editSubjectId').value = id;
+            document.getElementById('editSubjectName').value = name;
+            document.getElementById('editSubjectDescription').value = description;
+            new bootstrap.Modal(document.getElementById('editSubjectModal')).show();
+        };
+
+        window.validateAndUpdateSubject = function() {
+            const name = document.getElementById('editSubjectName').value.trim();
+            const description = document.getElementById('editSubjectDescription').value.trim();
+            const nameValidation = document.getElementById('editNameValidation');
+            const descValidation = document.getElementById('editDescValidation');
+            
+            nameValidation.style.display = !name ? 'block' : 'none';
+            descValidation.style.display = !description ? 'block' : 'none';
+
+            if (name && description) {
+                updateSubject();
+            }
+        };
+
+        window.updateSubject = async function() {
+            const id = document.getElementById('editSubjectId').value;
+            const name = document.getElementById('editSubjectName').value;
+            const description = document.getElementById('editSubjectDescription').value;
+
+            try {
+                await updateDoc(doc(db, "subjectlist", id), {
+                    name: name,
+                    description: description
+                });
+                
+                bootstrap.Modal.getInstance(document.getElementById('editSubjectModal')).hide();
+                showAlert('success', 'Subject updated successfully!');
+                loadSubjects();
+            } catch (error) {
+                console.error("Error updating subject: ", error);
+                showAlert('error', 'Error updating subject');
+            }
+        };
+
+        window.showConfirmDialog = function(id) {
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('confirmationDialog').style.display = 'block';
+            document.getElementById('confirmDeleteBtn').onclick = () => {
+                hideConfirmDialog();
+                deleteSubject(id);
+            };
+        };
+
+        window.hideConfirmDialog = function() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('confirmationDialog').style.display = 'none';
+        };
+
+        window.deleteSubject = async function(id) {
+            try {
+                await deleteDoc(doc(db, "subjectlist", id));
+                showAlert('success', 'Subject deleted successfully!');
+                loadSubjects();
+            } catch (error) {
+                console.error("Error deleting subject: ", error);
+                showAlert('error', 'Error deleting subject');
+            }
+        };
+
+        async function loadSubjects() {
+            showLoading();
+            const subjectsList = document.getElementById('subjectsList');
+            subjectsList.innerHTML = '';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "subjectlist"));
+                querySnapshot.forEach((doc) => {
+                    const subject = doc.data();
+                    const subjectCard = `
+                        <div class="col-md-4 mb-3">
+                            <div class="subject-card">
+                                <h4><i class="fas fa-book"></i> ${subject.name}</h4>
+                                <p class="text-muted">${subject.description}</p>
+                                <div class="btn-group">
+                                    <button class="btn btn-warning btn-action text-dark" onclick="editSubject('${doc.id}', '${subject.name}', '${subject.description}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-danger btn-action" onclick="showConfirmDialog('${doc.id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    subjectsList.innerHTML += subjectCard;
+                });
+            } catch (error) {
+                console.error("Error loading subjects: ", error);
+                subjectsList.innerHTML = '<p class="text-danger">Error loading subjects</p>';
+                showAlert('error', 'Error loading subjects');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Initial load
+        loadSubjects();
+    </script>
+</body>
+</html>
