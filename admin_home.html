@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Admissions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="CSS/admin_home.css">
+</head>
+
+<body>
+    <script>
+        // Check if user is coming from RFID login
+        if (!sessionStorage.getItem('rfidAuthenticated')) {
+            window.location.href = './admin_rfid.html';
+        }
+
+        // Add event listener for logout button
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Remove authentication flag
+                sessionStorage.removeItem('rfidAuthenticated');
+                // Redirect to RFID login page
+                window.location.href = './admin_rfid.html';
+            });
+        });
+    </script>
+
+    <!-- Top Navigation -->
+    <header class="top-nav animate__animated animate__fadeInDown">
+        <div class="logo">
+            <img src="./asset/cdm_logo.png" alt="Logo">
+            <h1>Admissions Dashboard</h1>
+        </div>
+        <div class="logout">
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <aside class="sidebar animate__animated animate__fadeInLeft">
+        <ul>
+            <li>
+                <a href="admin_users.html">
+                    <span class="icon"><i class="fas fa-user"></i></span>
+                    Users
+                </a>
+            </li>
+            
+            <li>
+                <a href="admin_admin_account.html">
+                    <span class="icon"><i class="fas fa-user"></i></span>
+                    Admin
+                </a>
+            </li>
+
+            <li>
+                <a href="Javascript/entranceexam(admin)/home.html">
+                    <span class="icon"><i class="fas fa-file-alt"></i></span>
+                    Entrance Exam Admin
+                </a>
+            </li>
+        
+            <li>
+                <a href="#" class="dropdown-toggle">
+                    <span class="icon"><i class="fas fa-user-graduate"></i></span>
+                    Freshmen
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a href="admin_freshmen_applicants.html">
+                            <span class="icon"><i class="fas fa-file-alt"></i></span>
+                            Applicants
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_freshmen_status.html">
+                            <span class="icon"><i class="fas fa-tasks"></i></span>
+                            Applicants Status
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_freshmen_approved_applicants.html">
+                            <span class="icon"><i class="fas fa-check-circle"></i></span>
+                            Approved Applicants
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_freshmen_schedule.html">
+                            <span class="icon"><i class="fas fa-calendar-alt"></i></span>
+                            Schedule
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_freshmen_results.html">
+                            <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                            Results
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_freshmen_upload_documents.html">
+                            <span class="icon"><i class="fas fa-upload"></i></span>
+                            Upload Documents
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#" class="dropdown-toggle">
+                    <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+                    Transferee
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a href="admin_transferee_applicants.html">
+                            <span class="icon"><i class="fas fa-file-alt"></i></span>
+                            Applicants
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_transferee_status.html">
+                            <span class="icon"><i class="fas fa-tasks"></i></span>
+                            Applicants Status
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_transferee_approved_applicants.html">
+                            <span class="icon"><i class="fas fa-check-circle"></i></span>
+                            Approved Applicants
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_transferee_schedule.html">
+                            <span class="icon"><i class="fas fa-calendar-alt"></i></span>
+                            Schedule
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_transferee_results.html">
+                            <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                            Results
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin_transferee_upload_documents.html">
+                            <span class="icon"><i class="fas fa-upload"></i></span>
+                            Upload Documents
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content animate__animated animate__fadeIn">
+        <h2>Welcome to the Admissions Dashboard, <span class="green-accent">Admin!</span></h2>
+
+        <section class="welcome-section">
+            <h3>Dashboard Overview</h3>
+            <p>Here you can view key statistics and trends for both freshmen and transferee applicants.</p>
+        </section>
+
+        <div class="chart-container">
+            <div class="chart-box">
+                <h3 class="chart-title">Freshmen Applicants Distribution</h3>
+                <div id="freshmenPieChartLoading" class="loading"></div>
+                <canvas id="freshmenPieChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3 class="chart-title">Transferee Applicants Distribution</h3>
+                <div id="transfereePieChartLoading" class="loading"></div>
+                <canvas id="transfereePieChart"></canvas>
+            </div>
+            <div class="chart-box" style="width: 100%;">
+                <h3 class="chart-title">Freshmen vs Transferees by Stage</h3>
+                <div id="barChartLoading" class="loading"></div>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for new applicants -->
+    <div id="newApplicantsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-bell notification-icon"></i>New Applicants Notification</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Loading new applicants...</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="closeModal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="Javascript/admin_home.js"></script>
+
+</body>
+
+</html>

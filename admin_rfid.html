@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFID Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #006400;
+            --secondary-color: #FFFFFF;
+            --text-color: #333333;
+            --dark-green: #005700;
+            --error-color: #FF0000;
+            --google-blue: #4285F4;
+            --button-active-blue: #1669F2;
+            --input-border: #E5E7EB;
+            --input-focus: #006400;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #006400, #FFFFFF);
+        }
+
+        .container {
+            background-color: var(--secondary-color);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 900px;
+            max-width: 100%;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .branding {
+            background-color: var(--primary-color);
+            padding: 40px;
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--secondary-color);
+        }
+
+        .branding img {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        .branding h2 {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .branding p {
+            font-size: 16px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .login-form {
+            padding: 40px;
+            width: 60%;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-control:focus {
+            border-color: var(--dark-green);
+            box-shadow: 0 0 0 0.2rem rgba(0, 128, 0, 0.25);
+        }
+
+        .rfid-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner-border {
+            display: none;
+            margin: 0 auto 20px;
+        }
+
+        .is-invalid {
+            border-color: var(--error-color);
+        }
+
+        /* Enhanced Confirmation Modal Styles */
+        .modal-content {
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-green));
+            color: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            border: none;
+        }
+
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-title i {
+            font-size: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+            background-color: #f8f9fa;
+        }
+
+        .verification-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .confirmation-input-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        .code-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: 2px solid var(--input-border);
+            border-radius: 12px;
+            background-color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .code-input:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .code-input.is-invalid {
+            border-color: var(--error-color);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .modal-footer {
+            border-top: none;
+            padding: 2rem;
+            background-color: #f8f9fa;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-green));
+            color: white;
+            padding: 12px 35px;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            min-width: 150px;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,100,0,0.2);
+        }
+
+        .btn-cancel {
+            border-radius: 30px;
+            padding: 12px 35px;
+            min-width: 150px;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .modal-error {
+            color: var(--error-color);
+            display: none;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(255,0,0,0.1);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                width: 95%;
+            }
+
+            .branding, .login-form {
+                width: 100%;
+            }
+
+            .branding img {
+                width: 100px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .code-input {
+                width: 40px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .modal-title {
+                font-size: 1.4rem;
+            }
+
+            .verification-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="mainContainer">
+        <div class="branding">
+            <img src="./asset/cdm_logo.png" alt="School Logo">
+            <h2>RFID Login</h2>
+            <p>Secure Access for Authorized Personnel</p>
+        </div>
+        <div class="login-form">
+            <h1>Welcome, Please Use Your RFID Card</h1>
+            <div class="text-center">
+                <i class="fas fa-id-card rfid-icon"></i>
+            </div>
+            <section id="rfidInstructions" class="text-center mb-4" aria-live="polite">
+                <p>Please follow these steps:</p>
+                <ol class="text-start">
+                    <li>Ensure the RFID card reader is connected to your computer.</li>
+                    <li>Click on the input field below to focus it.</li>
+                    <li>Tap your RFID card on the reader.</li>
+                    <li>The card ID will be securely captured.</li>
+                </ol>
+            </section>
+            <form id="verificationForm">
+                <div class="mb-3">
+                    <label for="verificationInput" class="form-label">RFID Card ID</label>
+                    <input type="password" class="form-control" id="verificationInput" placeholder="Click here, then tap your card" autocomplete="off">
+                    <div class="invalid-feedback">
+                        Please enter a valid RFID.
+                    </div>
+                </div>
+            </form>
+            <div class="spinner-border text-success" role="status" id="loadingSpinner">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="alert alert-success" role="alert" id="successAlert" aria-live="assertive">
+                Verification successful! Please check your email for confirmation code.
+            </div>
+            <div class="alert alert-danger" role="alert" id="errorAlert" aria-live="assertive">
+                Invalid RFID. Please try again.
+            </div>
+
+            <!-- Enhanced Confirmation Modal -->
+            <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="confirmationModalLabel">
+                                <i class="fas fa-shield-alt"></i>
+                                Two-Step Verification
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <i class="fas fa-envelope-circle-check verification-icon"></i>
+                            <h4 class="mb-3">Check your email</h4>
+                            <p class="text-muted mb-4">We've sent a 6-digit verification code to your email address. Enter the code below to continue.</p>
+                            <form id="confirmationForm">
+                                <div class="confirmation-input-group">
+                                    <input type="text" maxlength="1" class="code-input" required>
+                                    <input type="text" maxlength="1" class="code-input" required>
+                                    <input type="text" maxlength="1" class="code-input" required>
+                                    <input type="text" maxlength="1" class="code-input" required>
+                                    <input type="text" maxlength="1" class="code-input" required>
+                                    <input type="text" maxlength="1" class="code-input" required>
+                                </div>
+                                <div class="modal-error" id="modalError">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    Incorrect verification code. Please try again.
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary btn-cancel" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="button" class="btn btn-confirm" id="confirmCodeBtn">
+                                <i class="fas fa-check me-2"></i>Verify Code
+                                <span class="spinner-border spinner-border-sm ms-2 d-none" id="verifySpinner"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="module">
+        import { db } from './Javascript/firebase_config.js';
+        import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Initialize EmailJS
+        emailjs.init("OQk-9GsPJf-N35HYi");
+
+        const verificationForm = document.getElementById('verificationForm');
+        const verificationInput = document.getElementById('verificationInput');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        const confirmCodeBtn = document.getElementById('confirmCodeBtn');
+        const modalError = document.getElementById('modalError');
+        const verifySpinner = document.getElementById('verifySpinner');
+        const confirmationForm = document.getElementById('confirmationForm');
+        
+        let confirmationCode = '';
+        let userEmail = '';
+
+        // Add auto-focus for code inputs
+        const codeInputs = document.querySelectorAll('.code-input');
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('keyup', (e) => {
+                if (e.key >= 0 && e.key <= 9) {
+                    if (index < codeInputs.length - 1) {
+                        codeInputs[index + 1].focus();
+                    } else if (index === codeInputs.length - 1) {
+                        verifyCode();
+                    }
+                } else if (e.key === 'Backspace') {
+                    if (index > 0) {
+                        codeInputs[index - 1].focus();
+                    }
+                } else if (e.key === 'Enter') {
+                    verifyCode();
+                }
+            });
+        });
+
+        verificationInput.addEventListener('focus', () => {
+            verificationInput.value = '';
+            verificationInput.classList.remove('is-invalid');
+        });
+
+        verificationInput.addEventListener('blur', () => {
+            if (!verificationInput.value) {
+                verificationInput.value = '';
+            }
+        });
+
+        verificationForm.addEventListener('submit', handleSubmit);
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const rfidValue = verificationInput.value.trim();
+            if (rfidValue) {
+                successAlert.style.display = 'none';
+                errorAlert.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+
+                try {
+                    // Hash the RFID value
+                    const hashedRfidId = CryptoJS.SHA256(rfidValue).toString().substring(0, 16);
+
+                    const adminAccountRef = doc(db, 'admin_accounts', hashedRfidId);
+                    const adminAccountDoc = await getDoc(adminAccountRef);
+
+                    if (adminAccountDoc.exists()) {
+                        const adminAccount = adminAccountDoc.data();
+                        userEmail = adminAccount.email;
+                        
+                        // Generate random 6-digit confirmation code
+                        confirmationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                        
+                        // Send confirmation code via email
+                        await sendConfirmationEmail(userEmail, confirmationCode);
+                        
+                        loadingSpinner.style.display = 'none';
+                        successAlert.style.display = 'block';
+                        confirmationModal.show();
+                        
+                        // Clear and focus first code input
+                        codeInputs.forEach(input => input.value = '');
+                        codeInputs[0].focus();
+                        modalError.style.display = 'none';
+                    } else {
+                        throw new Error('Invalid RFID');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    loadingSpinner.style.display = 'none';
+                    errorAlert.textContent = `Error: ${error.message}`;
+                    errorAlert.style.display = 'block';
+                    verificationInput.classList.add('is-invalid');
+                }
+            } else {
+                errorAlert.textContent = 'Please enter an RFID';
+                errorAlert.style.display = 'block';
+                verificationInput.classList.add('is-invalid');
+            }
+        }
+
+        async function sendConfirmationEmail(email, code) {
+            try {
+                const templateParams = {
+                    to_email: email,
+                    to_name: email.split('@')[0], // Extract name from email
+                    from_name: "CDM RFID System",
+                    message: "You are receiving this email because you attempted to login to the CDM RFID System. If this wasn't you, please ignore this email.",
+                    confirmation_code: code
+                };
+
+                await emailjs.send(
+                    "service_3j9xxep",
+                    "template_94pj0kq",
+                    templateParams
+                );
+            } catch (error) {
+                console.error("Error sending email:", error);
+                throw new Error("Failed to send confirmation email");
+            }
+        }
+
+        async function verifyCode() {
+            const enteredCode = Array.from(codeInputs).map(input => input.value).join('');
+            if (enteredCode.length === 6) {
+                verifySpinner.classList.remove('d-none');
+                confirmCodeBtn.disabled = true;
+
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate verification delay
+
+                if (enteredCode === confirmationCode) {
+                    sessionStorage.setItem('rfidAuthenticated', 'true');
+                    window.location.href = './admin_home.html';
+                } else {
+                    modalError.style.display = 'block';
+                    codeInputs.forEach(input => {
+                        input.value = '';
+                        input.classList.add('is-invalid');
+                    });
+                    codeInputs[0].focus();
+                }
+
+                verifySpinner.classList.add('d-none');
+                confirmCodeBtn.disabled = false;
+            }
+        }
+
+        confirmCodeBtn.addEventListener('click', verifyCode);
+
+        confirmationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            verifyCode();
+        });
+    </script>
+</body>
+
+</html>

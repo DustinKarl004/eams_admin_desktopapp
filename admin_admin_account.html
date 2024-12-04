@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Admin Accounts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="CSS/admin_admin_account.css">
+</head>
+
+<body>
+    <script>
+        // Check if user is coming from RFID login
+        if (!sessionStorage.getItem('rfidAuthenticated')) {
+            window.location.href = './admin_rfid.html';
+        }
+    </script>
+
+    <div id="navbar-placeholder"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="search-container">
+            <form action="" method="GET" class="search-form" id="searchForm">
+                <input type="text" name="search" id="searchInput" placeholder="Search admin accounts..." class="form-control">
+            </form>
+        </div>
+
+        <div class="table-container fade-in">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0"><i class="fas fa-user-shield me-2" style="color: #006400;"></i><span style="color: #006400;">Admin Accounts</span></h3>
+                <span class="total-admin-badge">
+                    <i class="fas fa-users-cog"></i>
+                    Total Admins: <span id="totalAdminCount" class="animate__animated animate__fadeIn">Loading...</span>
+                </span>
+            </div>
+            <div class="mb-3">
+                <button id="addAdminAccountBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#adminAccountModal"><i class="fas fa-user-plus me-2"></i>Add Admin Account</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th data-sort="adminName"><i class="fas fa-user me-2"></i>Admin Name <i class="fas fa-sort"></i></th>
+                            <th data-sort="email"><i class="fas fa-envelope me-2"></i>Email <i class="fas fa-sort"></i></th>
+                            <th><i class="fas fa-cogs me-2"></i>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminAccountTableBody">
+                        <!-- Admin account data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="loadingIndicator" class="text-center">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading admin accounts...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Admin Account Modal -->
+    <div class="modal fade" id="adminAccountModal" tabindex="-1" aria-labelledby="adminAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adminAccountModalLabel"><i class="fas fa-user-plus me-2"></i>Add Admin Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adminAccountForm">
+                        <div class="mb-3">
+                            <label for="adminName" class="form-label">Admin Name</label>
+                            <input type="text" class="form-control" id="adminName" required placeholder="Enter admin name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="accountKey" class="form-label">Account Key</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="accountKey" required placeholder="Click here and tap access card">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleAccountKey">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required placeholder="Enter email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="adminPassword" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="adminPassword" required placeholder="Enter password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}" title="Must contain at least one number, one uppercase letter, one lowercase letter, one special character, and at least 8 characters">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-requirements">
+                                Password must be at least 8 characters long, include a number, an uppercase letter, a lowercase letter, and a special character.
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
+                    <button type="button" class="btn btn-primary" id="saveAdminAccount"><i class="fas fa-plus me-2"></i>Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteConfirmMessage"></p>
+                    <div id="deletePasswordContainer" class="mb-3">
+                        <label for="deletePassword" class="form-label">Enter Password to Confirm Deletion</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="deletePassword" required>
+                            <button class="btn btn-outline-secondary" type="button" id="toggleDeletePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete"><i class="fas fa-trash-alt me-2"></i>Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-black" id="alertModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Alert</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="alertMessage" class="text-black"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn bg-warning text-black" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="Javascript/admin_admin_account.js"></script>
+
+    <script>
+        // Load the navbar
+        fetch('admin_navbar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-placeholder').innerHTML = data;
+                setActiveNavItem();
+            })
+            .catch(error => {
+                console.error('Error loading navbar:', error);
+            });
+
+        // Function to set active nav item
+        function setActiveNavItem() {
+            const currentPage = window.location.pathname.split("/").pop();
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            
+            // Check for active dropdown items
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+            dropdownItems.forEach(item => {
+                if (item.getAttribute('href') === currentPage) {
+                    const parentDropdown = item.closest('.dropdown');
+                    if (parentDropdown) {
+                        parentDropdown.querySelector('.nav-link').classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // Call the function when the page loads
+        window.addEventListener('load', setActiveNavItem);
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('adminPassword');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+
+        // Toggle account key visibility
+        document.getElementById('toggleAccountKey').addEventListener('click', function() {
+            const accountKeyInput = document.getElementById('accountKey');
+            const type = accountKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            accountKeyInput.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+
+        // Toggle delete password visibility in the confirmation modal
+        document.getElementById('toggleDeletePassword').addEventListener('click', function() {
+            const deletePasswordInput = document.getElementById('deletePassword');
+            const type = deletePasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            deletePasswordInput.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    </script>
+
+</body>
+
+</html>

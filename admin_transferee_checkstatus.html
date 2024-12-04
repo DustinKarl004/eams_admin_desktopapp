@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Transferee Status</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #008000;
+            --secondary-color: #FFFFFF;
+            --accent-color: #006400;
+            --hover-color: #00A000;
+            --background-color: #F5F5F5;
+            --text-color: #333333;
+            --light-green: #90EE90;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-top: 80px;
+        }
+
+        .header-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.5s ease-out;
+            overflow: hidden;
+        }
+
+        .header-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                rgba(144, 238, 144, 0.1) 0%,
+                rgba(144, 238, 144, 0.2) 25%,
+                rgba(144, 238, 144, 0.3) 50%,
+                rgba(144, 238, 144, 0.2) 75%,
+                rgba(144, 238, 144, 0.1) 100%
+            );
+            animation: rotateGradient 15s linear infinite, pulseGradient 5s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes rotateGradient {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulseGradient {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .back-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button i {
+            margin-right: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover i {
+            transform: translateX(-3px);
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .status-box {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            color: #333333;
+            transition: all 0.3s ease;
+        }
+
+        .status-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .status-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 17px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background-color: #e0e0e0;
+        }
+
+        .status-step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .status-step-text {
+            font-weight: 600;
+            color: #333333;
+            font-size: 18px;
+        }
+
+        .completed { 
+            background-color: #28a745; 
+        }
+
+        .in-progress { 
+            background-color: #ffc107; 
+        }
+
+        .not-started { 
+            background-color: #dc3545; 
+            color: white; 
+        }
+
+        .not-started::after {
+            content: 'Not completed';
+            position: absolute;
+            right: 10px;
+            font-size: 14px;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .applicant-name {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #004b23;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .applicant-name i {
+            margin-right: 10px;
+            color: #006400;
+            font-size: 1.8rem;
+        }
+
+        .applicant-email {
+            font-size: 1.1rem;
+            color: #666666;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .applicant-email i {
+            margin-right: 10px;
+            color: #008000;
+        }
+
+        .applicant-info-divider {
+            height: 2px;
+            background: linear-gradient(to right, #004b23, #38b000);
+            margin: 20px 0;
+            border-radius: 2px;
+        }
+
+        .overall-status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .overall-status.complete {
+            background: linear-gradient(135deg, #004b23, #38b000);
+        }
+
+        .overall-status.in-progress {
+            background: linear-gradient(135deg, #ff8c00, #ffa500);
+        }
+
+        .overall-status::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: rotate(30deg);
+        }
+
+        .overall-status span {
+            position: relative;
+            z-index: 1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .status-steps {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .color-coding-legend {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .legend-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #004b23;
+            margin-bottom: 15px;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            width: calc(25% - 10px);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .legend-text {
+            font-size: 0.9rem;
+            color: #333333;
+        }
+
+        .applicant-submitted {
+            font-size: 1rem;
+            color: #666666;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .applicant-submitted i {
+            margin-right: 10px;
+            color: #008000;
+        }
+
+        #loadingIndicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+        }
+
+        #loadingIndicator p {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #applicantsContainer {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        // Check if user is coming from RFID login
+        if (!sessionStorage.getItem('rfidAuthenticated')) {
+            window.location.href = './admin_rfid.html';
+        }
+    </script>
+
+    <div class="header-container">
+        <a href="admin_transferee_applicants.html" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="color-coding-legend">
+            <div class="legend-title">Status Color Coding</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #004b23;"></div>
+                    <div class="legend-text">Approved Applicant</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #006400;"></div>
+                    <div class="legend-text">Entrance Exam Schedule</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #008000;"></div>
+                    <div class="legend-text">Entrance Exam Result</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #38b000;"></div>
+                    <div class="legend-text">Upload Documents</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #dc3545;"></div>
+                    <div class="legend-text">Not Complete</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="text-center">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading applicant status...</p>
+        </div>
+
+        <div id="applicantsContainer" style="display: none;">
+            <!-- Applicant status boxes will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { db } from './Javascript/firebase_config.js';
+        import { collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        async function fetchApplicantStatus() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const email = urlParams.get('user_id');
+
+                if (!email) {
+                    console.error("No email provided");
+                    return;
+                }
+
+                const applicantDoc = await getDoc(doc(db, 'transferee_applicant_form', email));
+                if (!applicantDoc.exists()) {
+                    console.error("Applicant not found");
+                    return;
+                }
+
+                const data = applicantDoc.data();
+                const statusBox = await createStatusBox(data, email);
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('applicantsContainer').style.display = 'block';
+                document.getElementById('applicantsContainer').appendChild(statusBox);
+
+            } catch (error) {
+                console.error("Error fetching applicant status:", error);
+            }
+        }
+
+        async function createStatusBox(data, email) {
+            const box = document.createElement('div');
+            
+            const stages = [
+                { name: 'Approved Applicant', collection: 'transferee_approved_applicants', color: '#004b23' },
+                { name: 'Entrance Exam Schedule', collection: 'transferee_examinees', color: '#006400' },
+                { name: 'Entrance Exam Result', collection: 'transferee_examinees_result', color: '#008000' },
+                { name: 'Upload Documents', collection: 'transferee_stepfour_upload_documents', color: '#38b000' }
+            ];
+
+            let stageHtml = '';
+            let completedStages = 0;
+            for (const stage of stages) {
+                const isCompleted = await checkStageCompletion(email, stage.collection);
+                stageHtml += createStatusStep(stage.name, isCompleted, stage.color);
+                if (isCompleted) completedStages++;
+            }
+
+            const overallStatus = completedStages === stages.length ? 'Complete' : 'In Progress';
+            const statusClass = completedStages === stages.length ? 'complete' : 'in-progress';
+
+            box.innerHTML = `
+                <div class="status-box">
+                    <div class="applicant-name"><i class="fas fa-user-circle"></i>${data.applicant_info.first_name} ${data.applicant_info.middle_name} ${data.applicant_info.last_name}</div>
+                    <div class="applicant-email"><i class="fas fa-envelope"></i>${email}</div>
+                    <div class="applicant-info-divider"></div>
+                    <div class="status-steps">
+                        ${stageHtml}
+                    </div>
+                    <div class="overall-status ${statusClass}">Overall Status: ${overallStatus}</div>
+                </div>
+            `;
+            return box;
+        }
+
+        async function checkStageCompletion(email, collectionName) {
+            if (collectionName === 'transferee_stepfour_upload_documents') {
+                const docRef = doc(db, collectionName, email);
+                const docSnap = await getDoc(docRef);
+                return docSnap.exists();
+            } else {
+                const q = query(collection(db, collectionName), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            }
+        }
+
+        function createStatusStep(stepName, isCompleted, color) {
+            const status = isCompleted ? 'completed' : 'not-started';
+            const icon = isCompleted ? '✓' : '×';
+            const backgroundColor = isCompleted ? color : '#dc3545';
+            return `
+                <div class="status-step">
+                    <div class="status-step-icon ${status}" style="background-color: ${backgroundColor};">${icon}</div>
+                    <span class="status-step-text">${stepName}</span>
+                </div>
+            `;
+        }
+
+        // Initial fetch of applicant status
+        fetchApplicantStatus();
+    </script>
+</body>
+
+</html>
