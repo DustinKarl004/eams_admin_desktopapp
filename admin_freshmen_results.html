@@ -100,70 +100,23 @@
                         </div>
                         <div class="mb-3">
                             <label for="institute" class="form-label">Institute</label>
-                            <select class="form-select" id="institute" required>
-                                <option value="">Select an Institute</option>
-                                <option value="ICS">ICS</option>
-                                <option value="ITE">ITE</option>
-                                <option value="IBE">IBE</option>
-                            </select>
+                            <input type="text" class="form-control" id="institute" readonly>
                         </div>
                         <div class="mb-3">
                             <label for="course" class="form-label">Course</label>
-                            <select class="form-select" id="course" required>
-                                <option value="">Select a Course</option>
-                                <!-- Options will be dynamically populated based on Institute selection -->
-                            </select>
+                            <input type="text" class="form-control" id="course" readonly>
+                        </div>
+                        <div id="addModalLoadingIndicator" class="text-center" style="display: none;">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Processing data...</p>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
-                    <button type="button" class="btn btn-primary" onclick="addResult()"><i class="fas fa-plus me-2"></i>Add and Notify</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Update Result Modal -->
-    <div class="modal fade" id="updateResultModal" tabindex="-1" aria-labelledby="updateResultModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updateResultModalLabel">Update Result</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="updateResultForm">
-                        <input type="hidden" id="updateResultId">
-                        <div class="mb-3">
-                            <label for="updateEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="updateEmail" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateFullName" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="updateFullName" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateInstitute" class="form-label">Institute</label>
-                            <select class="form-select" id="updateInstitute" required>
-                                <option value="">Select an Institute</option>
-                                <option value="ICS">ICS</option>
-                                <option value="ITE">ITE</option>
-                                <option value="IBE">IBE</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateCourse" class="form-label">Course</label>
-                            <select class="form-select" id="updateCourse" required>
-                                <option value="">Select a Course</option>
-                                <!-- Options will be dynamically populated based on Institute selection -->
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
-                    <button type="button" class="btn btn-primary" onclick="updateResult()"><i class="fas fa-save me-2"></i>Update</button>
+                    <button type="button" class="btn btn-primary" id="addResultSubmitBtn" onclick="addResult()" disabled><i class="fas fa-plus me-2"></i>Add and Notify</button>
                 </div>
             </div>
         </div>

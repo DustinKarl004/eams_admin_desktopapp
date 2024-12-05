@@ -99,81 +99,14 @@
                             <input type="text" class="form-control" id="fullName" readonly>
                         </div>
                         <div class="mb-3">
-                            <label for="batchNumber" class="form-label">Batch Number</label>
-                            <input type="text" class="form-control" id="batchNumber" placeholder="Enter batch number" required>
-                        </div>
-                        <div class="mb-3">
                             <label for="examDate" class="form-label">Date</label>
                             <input type="date" class="form-control" id="examDate" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="examStartTime" class="form-label">Exam Start Time</label>
-                            <input type="time" class="form-control" id="examStartTime" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="examEndTime" class="form-label">Exam End Time</label>
-                            <input type="time" class="form-control" id="examEndTime" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="room" class="form-label">Room</label>
-                            <input type="text" class="form-control" id="room" placeholder="Enter room" required>
-                        </div>
-                        <input type="hidden" id="entranceId">
-                        <input type="hidden" id="qrCode">
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
-                    <button type="button" class="btn btn-primary" id="saveExaminee"><i class="fas fa-plus me-2"></i>Add and Notify</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Update Examinee Modal -->
-    <div class="modal fade" id="updateExamineeModal" tabindex="-1" aria-labelledby="updateExamineeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="updateExamineeModalLabel"><i class="fas fa-user-edit me-2"></i>Update Examinee</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="updateExamineeForm">
-                        <input type="hidden" id="updateExamineeId">
-                        <div class="mb-3">
-                            <label for="updateEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="updateEmail" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateFullName" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="updateFullName" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateBatchNumber" class="form-label">Batch Number</label>
-                            <input type="text" class="form-control" id="updateBatchNumber" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateExamDate" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="updateExamDate" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateExamStartTime" class="form-label">Exam Start Time</label>
-                            <input type="time" class="form-control" id="updateExamStartTime" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateExamEndTime" class="form-label">Exam End Time</label>
-                            <input type="time" class="form-control" id="updateExamEndTime" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="updateRoom" class="form-label">Room</label>
-                            <input type="text" class="form-control" id="updateRoom" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Close</button>
-                    <button type="button" class="btn btn-primary" id="updateExaminee"><i class="fas fa-save me-2"></i>Update</button>
+                    <button type="button" class="btn btn-primary" id="saveExaminee" disabled><i class="fas fa-plus me-2"></i>Add and Notify</button>
                 </div>
             </div>
         </div>
