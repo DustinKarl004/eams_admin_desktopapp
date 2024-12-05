@@ -1,19 +1,25 @@
 import { db } from '../firebase_config.js';
-import { collection, getDocs, getDoc, doc, setDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, getDoc, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Modal functionality
 const addExamineeBtn = document.getElementById('addExamineeBtn');
 const examineeModal = new bootstrap.Modal(document.getElementById('examineeModal'));
-const updateExamineeModal = new bootstrap.Modal(document.getElementById('updateExamineeModal'));
 const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
 const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
 const idSelect = document.getElementById('idSelect');
 const saveExamineeBtn = document.getElementById('saveExaminee');
-const updateExamineeBtn = document.getElementById('updateExaminee');
 const confirmDeleteBtn = document.getElementById('confirmDelete');
 
 let nextEntranceIdNumber = 1;
 let deletedEntranceIds = [];
+
+// Define batch schedules
+const batchSchedules = [
+    { startTime: '09:00', endTime: '11:00', room: 'Lab 1' },
+    { startTime: '09:00', endTime: '11:00', room: 'Lab 2' },
+    { startTime: '13:00', endTime: '15:00', room: 'Lab 1' },
+    { startTime: '13:00', endTime: '15:00', room: 'Lab 2' }
+];
 
 addExamineeBtn.addEventListener('click', () => {
     populateIdSelect();
@@ -36,6 +42,88 @@ async function populateIdSelect() {
             idSelect.appendChild(option);
         }
     });
+
+    // Set min date to today
+    const examDateInput = document.getElementById('examDate');
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+    examDateInput.min = formattedDate;
+
+    // Handle date selection
+    examDateInput.addEventListener('input', async () => {
+        const selectedDate = examDateInput.value;
+        saveExamineeBtn.disabled = true; // Disable button by default
+        
+        // Check if selected date is not past
+        const selectedDateTime = new Date(selectedDate);
+        const currentDate = new Date();
+        currentDate.setHours(0,0,0,0);
+
+        if (selectedDateTime < currentDate) {
+            examDateInput.style.backgroundColor = '#ffebee';
+            showAlert('Cannot select past dates. Please select a current or future date.');
+            examDateInput.value = '';
+            return;
+        }
+
+        const isDateFull = await checkIfDateIsFull(selectedDate);
+        if (isDateFull) {
+            examDateInput.style.backgroundColor = '#ffebee';
+            showAlert('This date has reached the maximum number of examinees (4 batches). Please select another date.');
+            examDateInput.value = '';
+        } else {
+            // Check if there are any existing exam dates
+            const examineesSnapshot = await getDocs(collection(db, 'transferee_examinees'));
+            const existingDates = examineesSnapshot.docs.map(doc => doc.data().examDate);
+            
+            if (existingDates.length > 0) {
+                // If dates exist, only allow selection of dates that already have examinees
+                // unless all existing dates are full
+                const dateHasExaminees = existingDates.includes(selectedDate);
+                const allExistingDatesFull = await Promise.all(
+                    [...new Set(existingDates)].map(async date => await checkIfDateIsFull(date))
+                );
+
+                if (!dateHasExaminees && !allExistingDatesFull.every(isFull => isFull)) {
+                    examDateInput.style.backgroundColor = '#ffebee';
+                    showAlert('Please fill slots for existing dates first before choosing a new date.');
+                    examDateInput.value = '';
+                    return;
+                }
+            }
+            
+            examDateInput.style.backgroundColor = '';
+            saveExamineeBtn.disabled = false; // Enable button only if date is valid
+        }
+    });
+}
+
+async function checkIfDateIsFull(date) {
+    const examineesSnapshot = await getDocs(collection(db, 'transferee_examinees'));
+    const examineesOnDate = examineesSnapshot.docs.filter(doc => doc.data().examDate === date);
+    return examineesOnDate.length >= 4; // 4 batches per day limit
+}
+
+async function getNextAvailableBatch(selectedDate) {
+    const examineesSnapshot = await getDocs(collection(db, 'transferee_examinees'));
+    const examineesOnDate = examineesSnapshot.docs
+        .filter(doc => doc.data().examDate === selectedDate)
+        .map(doc => doc.data());
+
+    // Find first available batch
+    for (let i = 0; i < batchSchedules.length; i++) {
+        const batchInUse = examineesOnDate.some(examinee => 
+            examinee.examStartTime === batchSchedules[i].startTime && 
+            examinee.room === batchSchedules[i].room
+        );
+        if (!batchInUse) {
+            return {
+                batchNumber: i + 1,
+                ...batchSchedules[i]
+            };
+        }
+    }
+    return null;
 }
 
 idSelect.addEventListener('change', async () => {
@@ -56,24 +144,13 @@ idSelect.addEventListener('change', async () => {
     }
 });
 
-function generateRandomWord(length) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
-
 async function generateEntranceId() {
     if (deletedEntranceIds.length > 0) {
         return deletedEntranceIds.shift();
     }
     
-    const randomWord = generateRandomWord(5);
     let numberPart;
     
-    // Check both freshmen and transferee collections
     const freshmenSnapshot = await getDocs(collection(db, 'freshmen_examinees'));
     const transfereeSnapshot = await getDocs(collection(db, 'transferee_examinees'));
     
@@ -87,22 +164,24 @@ async function generateEntranceId() {
         nextEntranceIdNumber++;
     } while (allEntranceIds.some(id => id.endsWith(numberPart)));
     
-    return `${randomWord}${numberPart}`;
+    return `App${numberPart}`;
 }
 
 saveExamineeBtn.addEventListener('click', async () => {
     const id = idSelect.value;
     const email = document.getElementById('email').value;
     const fullName = document.getElementById('fullName').value;
-    const batchNumber = document.getElementById('batchNumber').value;
     const examDate = document.getElementById('examDate').value;
-    const examStartTime = document.getElementById('examStartTime').value;
-    const examEndTime = document.getElementById('examEndTime').value;
-    const room = document.getElementById('room').value;
-    const entranceId = await generateEntranceId();
 
-    if (id && email && fullName && batchNumber && examDate && examStartTime && examEndTime && room && entranceId) {
+    if (id && email && fullName && examDate) {
         try {
+            const batch = await getNextAvailableBatch(examDate);
+            if (!batch) {
+                showAlert('No available batch slots for selected date. Please choose another date.');
+                return;
+            }
+
+            const entranceId = await generateEntranceId();
             const qr = qrcode(0, 'L');
             qr.addData(entranceId);
             qr.make();
@@ -111,11 +190,11 @@ saveExamineeBtn.addEventListener('click', async () => {
             await setDoc(doc(db, 'transferee_examinees', id), {
                 email,
                 fullName,
-                batchNumber,
+                batchNumber: batch.batchNumber,
                 examDate,
-                examStartTime,
-                examEndTime,
-                room,
+                examStartTime: batch.startTime,
+                examEndTime: batch.endTime,
+                room: batch.room,
                 entranceId,
                 qrCode: qrCodeDataUrl
             });
@@ -164,7 +243,7 @@ saveExamineeBtn.addEventListener('click', async () => {
             showAlert('An error occurred while saving the examinee. Please try again.');
         }
     } else {
-        showAlert('Please fill all fields');
+        showAlert('Please fill all required fields');
     }
 });
 
@@ -217,12 +296,6 @@ function renderExamineeTable() {
         row.insertCell().textContent = examinee.room;
         
         const actionsCell = row.insertCell();
-        const updateBtn = document.createElement('button');
-        updateBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Update';
-        updateBtn.className = 'btn btn-sm btn-primary me-2';
-        updateBtn.addEventListener('click', () => showUpdateModal(examinee.id, examinee));
-        actionsCell.appendChild(updateBtn);
-
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt me-2"></i>Delete';
         deleteBtn.className = 'btn btn-sm btn-danger';
@@ -233,47 +306,6 @@ function renderExamineeTable() {
     document.getElementById('totalExamineesCount').textContent = examinees.length;
 }
 
-function showUpdateModal(id, data) {
-    document.getElementById('updateExamineeId').value = id;
-    document.getElementById('updateEmail').value = data.email;
-    document.getElementById('updateFullName').value = data.fullName;
-    document.getElementById('updateBatchNumber').value = data.batchNumber;
-    document.getElementById('updateExamDate').value = data.examDate;
-    document.getElementById('updateExamStartTime').value = data.examStartTime;
-    document.getElementById('updateExamEndTime').value = data.examEndTime;
-    document.getElementById('updateRoom').value = data.room;
-    updateExamineeModal.show();
-}
-
-updateExamineeBtn.addEventListener('click', async () => {
-    const id = document.getElementById('updateExamineeId').value;
-    const batchNumber = document.getElementById('updateBatchNumber').value;
-    const examDate = document.getElementById('updateExamDate').value;
-    const examStartTime = document.getElementById('updateExamStartTime').value;
-    const examEndTime = document.getElementById('updateExamEndTime').value;
-    const room = document.getElementById('updateRoom').value;
-
-    if (id && batchNumber && examDate && examStartTime && examEndTime && room) {
-        try {
-            await updateDoc(doc(db, 'transferee_examinees', id), {
-                batchNumber,
-                examDate,
-                examStartTime,
-                examEndTime,
-                room
-            });
-            updateExamineeModal.hide();
-            fetchExaminees();
-            showAlert('Examinee updated successfully.');
-        } catch (error) {
-            console.error('Error updating examinee:', error);
-            showAlert('An error occurred while updating the examinee. Please try again.');
-        }
-    } else {
-        showAlert('Please fill all fields');
-    }
-});
-
 function showDeleteConfirmModal(id, email, entranceId) {
     confirmDeleteBtn.onclick = () => deleteExaminee(id, email, entranceId);
     deleteConfirmModal.show();
@@ -281,29 +313,11 @@ function showDeleteConfirmModal(id, email, entranceId) {
 
 async function deleteExaminee(id, email, entranceId) {
     try {
-        // Check if there's a result record for this email
         const resultQuery = query(collection(db, 'transferee_examinees_result'), where('email', '==', email));
         const resultSnapshot = await getDocs(resultQuery);
 
-        // Check if there's an assessment record for this email
-        const assessmentQuery = query(collection(db, 'transferee_assessment'), where('email', '==', email));
-        const assessmentSnapshot = await getDocs(assessmentQuery);
-
-        // Check if there's an enrollment record for this email
-        const enrollmentQuery = query(collection(db, 'transferee_enrollment'), where('email', '==', email));
-        const enrollmentSnapshot = await getDocs(enrollmentQuery);
-
-        // Check if there's a medical completion record for this email
-        const medicalQuery = query(collection(db, 'transferee_medical_completion'), where('email', '==', email));
-        const medicalSnapshot = await getDocs(medicalQuery);
-
-        if (!resultSnapshot.empty || !assessmentSnapshot.empty || !enrollmentSnapshot.empty || !medicalSnapshot.empty) {
-            let message = 'Cannot delete examinee. ';
-            if (!resultSnapshot.empty) message += 'A result record exists for this email. ';
-            if (!assessmentSnapshot.empty) message += 'An assessment record exists for this email. ';
-            if (!enrollmentSnapshot.empty) message += 'An enrollment record exists for this email. ';
-            if (!medicalSnapshot.empty) message += 'A medical completion record exists for this email. ';
-            message += 'Please delete these records first before deleting the examinee.';
+        if (!resultSnapshot.empty) {
+            let message = 'Cannot delete examinee. A result record exists for this email. Please delete the result record first before deleting the examinee.';
             showAlert(message);
             deleteConfirmModal.hide();
             return;
@@ -334,12 +348,10 @@ function formatTime(timeString) {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
-// Search functionality
 document.getElementById('searchInput').addEventListener('input', (event) => {
     fetchExaminees(event.target.value);
 });
 
-// Sort functionality
 function sortExaminees(field, direction) {
     examinees.sort((a, b) => {
         if (a[field] < b[field]) return direction === 'asc' ? -1 : 1;
@@ -374,5 +386,4 @@ function updateSortIcons() {
     }
 }
 
-// Initial fetch of examinee data
 fetchExaminees();

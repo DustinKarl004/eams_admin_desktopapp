@@ -23,46 +23,70 @@ async function populateIdSelect() {
     const approvedApplicantsSnapshot = await getDocs(collection(db, 'transferee_approved_applicants'));
     const approvedIds = new Set(approvedApplicantsSnapshot.docs.map(doc => doc.id));
 
+    const priorityApplicants = [];
+    const montalbamApplicants = [];
+
     for (const doc of usersSnapshot.docs) {
         const id = doc.id;
         const userData = doc.data();
         if (!approvedIds.has(id) && userData.email) {
-            const isTransferee = await checkIfTransferee(userData.email);
-            if (isTransferee) {
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = userData.email;
-                idSelect.appendChild(option);
+            const applicantData = await getApplicantData(userData.email);
+            if (applicantData) {
+                const isFromMontalban = checkIfFromMontalban(applicantData);
+                const hasHonors = checkIfHasHonors(applicantData);
+                
+                // Only proceed if applicant is from Montalban
+                if (isFromMontalban) {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = userData.email;
+
+                    if (hasHonors) {
+                        option.dataset.priority = 'highest';
+                        priorityApplicants.push(option);
+                    } else {
+                        option.dataset.priority = 'montalban';
+                        montalbamApplicants.push(option);
+                    }
+                }
             }
         }
     }
+
+    // Add options in priority order
+    if (priorityApplicants.length > 0) {
+        const priorityGroup = document.createElement('optgroup');
+        priorityGroup.label = 'Priority: From Montalban with Honors';
+        priorityApplicants.forEach(opt => priorityGroup.appendChild(opt));
+        idSelect.appendChild(priorityGroup);
+    }
+
+    if (montalbamApplicants.length > 0) {
+        const montalbamGroup = document.createElement('optgroup');
+        montalbamGroup.label = 'Priority: From Montalban';
+        montalbamApplicants.forEach(opt => montalbamGroup.appendChild(opt));
+        idSelect.appendChild(montalbamGroup);
+    }
 }
 
-async function checkIfTransferee(email) {
-    const categories = [
-        'address_and_cn',
-        'applicant_info',
-        'captured_image',
-        'course',
-        'education',
-        'family_income',
-        'family_info',
-        'guardian_info',
-        'other_applicant_info',
-        'parents_info',
-        'proof_of_eligibility',
-        'proof_of_residency',
-        'sector_and_work_status'
-    ];
-
+async function getApplicantData(email) {
     const docRef = doc(db, 'transferee_applicant_form', email);
     const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        return categories.some(category => data[category] && Object.keys(data[category]).length > 0);
-    }
-    return false;
+    return docSnap.exists() ? docSnap.data() : null;
+}
+
+function checkIfFromMontalban(data) {
+    const addressInfo = data.address_and_cn || {};
+    return addressInfo.municipality?.toLowerCase().includes('montalban') || 
+           addressInfo.municipality?.toLowerCase().includes('rodriguez');
+}
+
+function checkIfHasHonors(data) {
+    const educationInfo = data.education || {};
+    return educationInfo.senior_high_honors && 
+           educationInfo.senior_high_honors.toLowerCase() !== 'none' &&
+           educationInfo.senior_high_honors.toLowerCase() !== 'n/a' &&
+           educationInfo.senior_high_honors.trim() !== '';
 }
 
 idSelect.addEventListener('change', async () => {
@@ -87,10 +111,11 @@ idSelect.addEventListener('change', async () => {
 
                 const applicantFormDoc = await getDoc(doc(db, 'transferee_applicant_form', userData.email));
                 if (applicantFormDoc.exists()) {
-                    const applicantData = applicantFormDoc.data().applicant_info || {};
-                    let last_name = applicantData.last_name || '';
-                    let first_name = applicantData.first_name || '';
-                    let middle_name = applicantData.middle_name || '';
+                    const applicantData = applicantFormDoc.data();
+                    const applicantInfo = applicantData.applicant_info || {};
+                    let last_name = applicantInfo.last_name || '';
+                    let first_name = applicantInfo.first_name || '';
+                    let middle_name = applicantInfo.middle_name || '';
 
                     if (middle_name.toLowerCase() === 'n/a') {
                         middle_name = '';
@@ -98,37 +123,39 @@ idSelect.addEventListener('change', async () => {
 
                     const fullName = `${last_name}, ${first_name} ${middle_name}`.trim();
                     fullNameInput.value = fullName;
-                } else {
-                    fullNameInput.value = 'Applicant info not found';
+
+                    // Check if all forms are filled
+                    const categories = [
+                        'address_and_cn',
+                        'applicant_info',
+                        'captured_image',
+                        'course',
+                        'education',
+                        'family_income',
+                        'family_info',
+                        'guardian_info',
+                        'other_applicant_info',
+                        'parents_info',
+                        'proof_of_eligibility',
+                        'proof_of_residency',
+                        'sector_and_work_status'
+                    ];
+
+                    const allFormsFilled = categories.every(category => 
+                        applicantData[category] && Object.keys(applicantData[category]).length > 0
+                    );
+
+                    const isFromMontalban = checkIfFromMontalban(applicantData);
+                    const hasHonors = checkIfHasHonors(applicantData);
+
+                    let status = allFormsFilled ? 'All forms filled' : 'Incomplete forms';
+                    if (isFromMontalban) {
+                        status += hasHonors ? ' | Priority: From Montalban with Honors' : ' | Priority: From Montalban';
+                    }
+
+                    applicationStatusInput.value = status;
+                    saveApprovedApplicantBtn.disabled = !allFormsFilled;
                 }
-
-                const categories = [
-                    'address_and_cn',
-                    'applicant_info',
-                    'captured_image',
-                    'course',
-                    'education',
-                    'family_income',
-                    'family_info',
-                    'guardian_info',
-                    'other_applicant_info',
-                    'parents_info',
-                    'proof_of_eligibility',
-                    'proof_of_residency',
-                    'sector_and_work_status'
-                ];
-
-                const docRef = doc(db, 'transferee_applicant_form', userData.email);
-                const docSnap = await getDoc(docRef);
-                
-                let allFormsFilled = false;
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    allFormsFilled = categories.every(category => data[category] && Object.keys(data[category]).length > 0);
-                }
-
-                applicationStatusInput.value = allFormsFilled ? 'All forms filled' : 'Incomplete forms';
-                saveApprovedApplicantBtn.disabled = !allFormsFilled;
             }
         } catch (error) {
             console.error('Error fetching user data:', error);
@@ -273,25 +300,10 @@ async function deleteApprovedApplicant(id, email) {
         const resultQuery = query(collection(db, 'transferee_examinees_result'), where('email', '==', email));
         const resultSnapshot = await getDocs(resultQuery);
 
-        // Check if there's an assessment record for this email
-        const assessmentQuery = query(collection(db, 'transferee_assessment'), where('email', '==', email));
-        const assessmentSnapshot = await getDocs(assessmentQuery);
-
-        // Check if there's an enrollment record for this email
-        const enrollmentQuery = query(collection(db, 'transferee_enrollment'), where('email', '==', email));
-        const enrollmentSnapshot = await getDocs(enrollmentQuery);
-
-        // Check if there's a medical completion record for this email
-        const medicalQuery = query(collection(db, 'transferee_medical_completion'), where('email', '==', email));
-        const medicalSnapshot = await getDocs(medicalQuery);
-
-        if (!examineeSnapshot.empty || !resultSnapshot.empty || !assessmentSnapshot.empty || !enrollmentSnapshot.empty || !medicalSnapshot.empty) {
+        if (!examineeSnapshot.empty || !resultSnapshot.empty) {
             let message = 'Cannot delete approved applicant. ';
             if (!examineeSnapshot.empty) message += 'An examinee schedule record exists for this email. ';
             if (!resultSnapshot.empty) message += 'An examinee result record exists for this email. ';
-            if (!assessmentSnapshot.empty) message += 'An assessment record exists for this email. ';
-            if (!enrollmentSnapshot.empty) message += 'An enrollment record exists for this email. ';
-            if (!medicalSnapshot.empty) message += 'A medical completion record exists for this email. ';
             message += 'Please delete these records first before deleting the approved applicant.';
             showAlert(message);
             deleteConfirmModal.hide();
