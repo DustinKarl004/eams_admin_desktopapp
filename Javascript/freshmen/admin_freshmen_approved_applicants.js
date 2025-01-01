@@ -18,7 +18,9 @@ addApprovedApplicantBtn.addEventListener('click', () => {
 });
 
 async function populateIdSelect() {
-    idSelect.innerHTML = '<option value="">Select an Email (Kindly wait for the emails to load)</option>';
+    // Show loading message initially
+    idSelect.innerHTML = '<option value="">Select an Email (Loading data, please wait...)</option>';
+
     const usersSnapshot = await getDocs(collection(db, 'users'));
     const approvedApplicantsSnapshot = await getDocs(collection(db, 'freshmen_approved_applicants'));
     const approvedIds = new Set(approvedApplicantsSnapshot.docs.map(doc => doc.id));
@@ -52,6 +54,9 @@ async function populateIdSelect() {
             }
         }
     }
+
+    // Clear loading message and add default option
+    idSelect.innerHTML = '<option value="">Select an Email</option>';
 
     // Add options in priority order
     if (priorityApplicants.length > 0) {
@@ -310,10 +315,27 @@ async function deleteApprovedApplicant(id, email) {
             return;
         }
 
+        // Delete the approved applicant document
         await deleteDoc(doc(db, 'freshmen_approved_applicants', id));
+
+        // Delete the corresponding notification
+        const notificationRef = doc(db, 'Notifications', email);
+        const notificationSnap = await getDoc(notificationRef);
+        
+        if (notificationSnap.exists()) {
+            const notifications = notificationSnap.data().list || [];
+            const updatedNotifications = notifications.filter(notif => notif.category !== 'Application Approval');
+            
+            if (updatedNotifications.length > 0) {
+                await setDoc(notificationRef, { list: updatedNotifications });
+            } else {
+                await deleteDoc(notificationRef);
+            }
+        }
+
         deleteConfirmModal.hide();
         fetchApprovedApplicants();
-        showAlert('Approved applicant deleted successfully.');
+        showAlert('Approved applicant and related notification deleted successfully.');
     } catch (error) {
         console.error('Error deleting approved applicant:', error);
         showAlert('An error occurred while deleting the approved applicant. Please try again.');

@@ -463,16 +463,34 @@ function showDeleteConfirmModal(id, email) {
 
 async function deleteResult(id, email) {
     try {
+        // Delete the result document
         const resultRef = doc(db, 'transferee_examinees_result', id);
         await deleteDoc(resultRef);
+
+        // Delete the corresponding notification
+        const notificationRef = doc(db, 'Notifications', email);
+        const notificationSnap = await getDoc(notificationRef);
+        
+        if (notificationSnap.exists()) {
+            const notifications = notificationSnap.data().list || [];
+            const updatedNotifications = notifications.filter(notif => notif.category !== 'Results');
+            
+            if (updatedNotifications.length > 0) {
+                await setDoc(notificationRef, { list: updatedNotifications });
+            } else {
+                await deleteDoc(notificationRef);
+            }
+        }
+
         deleteConfirmModal.hide();
         fetchResults();
-        showAlert('Result deleted successfully.');
+        showAlert('Result and related notification deleted successfully.');
     } catch (error) {
         console.error('Error deleting result:', error);
         showAlert('An error occurred while deleting the result. Please try again.');
     }
 }
+
 
 function sortResults(field, direction) {
     results.sort((a, b) => {

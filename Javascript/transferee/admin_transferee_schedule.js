@@ -27,21 +27,78 @@ addExamineeBtn.addEventListener('click', () => {
 });
 
 async function populateIdSelect() {
-    idSelect.innerHTML = '<option value="">Select an Examinee (Kindly wait for the emails to load)</option>';
+    // Show loading message initially
+    idSelect.innerHTML = '<option value="">Select an Examinee (Loading data, please wait...)</option>';
+
     const examineesSnapshot = await getDocs(collection(db, 'transferee_approved_applicants'));
     const scheduledUsersSnapshot = await getDocs(collection(db, 'transferee_examinees'));
     const scheduledIds = new Set(scheduledUsersSnapshot.docs.map(doc => doc.id));
 
-    examineesSnapshot.forEach(doc => {
+    // Group examinees by priority
+    const priorityExaminees = [];
+    const montalbamExaminees = [];
+
+    for (const doc of examineesSnapshot.docs) {
         const id = doc.id;
         if (!scheduledIds.has(id)) {
-            const option = document.createElement('option');
-            option.value = id;
             const userData = doc.data();
-            option.textContent = `${userData.email} - ${userData.fullName}`;
-            idSelect.appendChild(option);
+            const applicantData = await getApplicantData(userData.email);
+            
+            if (applicantData) {
+                const isFromMontalban = checkIfFromMontalban(applicantData);
+                const hasHonors = checkIfHasHonors(applicantData);
+
+                if (isFromMontalban && hasHonors) {
+                    priorityExaminees.push({
+                        id,
+                        email: userData.email,
+                        fullName: userData.fullName,
+                        approvedAt: userData.approvedAt ? new Date(userData.approvedAt) : new Date()
+                    });
+                } else if (isFromMontalban) {
+                    montalbamExaminees.push({
+                        id,
+                        email: userData.email,
+                        fullName: userData.fullName,
+                        approvedAt: userData.approvedAt ? new Date(userData.approvedAt) : new Date()
+                    });
+                }
+            }
         }
-    });
+    }
+
+    // Sort each group by approvedAt date
+    const sortByApprovedAt = (a, b) => a.approvedAt - b.approvedAt;
+    priorityExaminees.sort(sortByApprovedAt);
+    montalbamExaminees.sort(sortByApprovedAt);
+
+    // Clear loading message and add default option
+    idSelect.innerHTML = '<option value="">Select an Examinee</option>';
+
+    // Add options to select with optgroups
+    if (priorityExaminees.length > 0) {
+        const priorityGroup = document.createElement('optgroup');
+        priorityGroup.label = 'Priority: From Montalban with Honors';
+        priorityExaminees.forEach(examinee => {
+            const option = document.createElement('option');
+            option.value = examinee.id;
+            option.textContent = `${examinee.email} - ${examinee.fullName}`;
+            priorityGroup.appendChild(option);
+        });
+        idSelect.appendChild(priorityGroup);
+    }
+
+    if (montalbamExaminees.length > 0) {
+        const montalbamGroup = document.createElement('optgroup');
+        montalbamGroup.label = 'Priority: From Montalban';
+        montalbamExaminees.forEach(examinee => {
+            const option = document.createElement('option');
+            option.value = examinee.id;
+            option.textContent = `${examinee.email} - ${examinee.fullName}`;
+            montalbamGroup.appendChild(option);
+        });
+        idSelect.appendChild(montalbamGroup);
+    }
 
     // Set min date to today
     const examDateInput = document.getElementById('examDate');
@@ -96,6 +153,23 @@ async function populateIdSelect() {
             saveExamineeBtn.disabled = false; // Enable button only if date is valid
         }
     });
+}
+
+async function getApplicantData(email) {
+    const docRef = doc(db, 'transferee_applicant_form', email);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() : null;
+}
+
+function checkIfFromMontalban(data) {
+    const addressInfo = data.address_and_cn || {};
+    return addressInfo.municipality?.toLowerCase().includes('montalban') || 
+           addressInfo.municipality?.toLowerCase().includes('rodriguez');
+}
+
+function checkIfHasHonors(data) {
+    const educationInfo = data.education_bg || {};
+    return educationInfo.academic_honors && educationInfo.academic_honors.trim() !== '';
 }
 
 async function checkIfDateIsFull(date) {
@@ -323,12 +397,29 @@ async function deleteExaminee(id, email, entranceId) {
             return;
         }
 
+        // Delete the examinee document
         await deleteDoc(doc(db, 'transferee_examinees', id));
+
+        // Delete the corresponding notification
+        const notificationRef = doc(db, 'Notifications', email);
+        const notificationSnap = await getDoc(notificationRef);
+        
+        if (notificationSnap.exists()) {
+            const notifications = notificationSnap.data().list || [];
+            const updatedNotifications = notifications.filter(notif => notif.category !== 'Schedule');
+            
+            if (updatedNotifications.length > 0) {
+                await setDoc(notificationRef, { list: updatedNotifications });
+            } else {
+                await deleteDoc(notificationRef);
+            }
+        }
+
         deletedEntranceIds.push(entranceId);
         deletedEntranceIds.sort();
         deleteConfirmModal.hide();
         fetchExaminees();
-        showAlert('Examinee deleted successfully.');
+        showAlert('Examinee and related notification deleted successfully.');
     } catch (error) {
         console.error('Error deleting examinee:', error);
         showAlert('An error occurred while deleting the examinee. Please try again.');
