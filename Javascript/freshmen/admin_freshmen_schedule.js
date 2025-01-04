@@ -131,7 +131,12 @@ async function populateIdSelect() {
         } else {
             // Check if there are any existing exam dates
             const examineesSnapshot = await getDocs(collection(db, 'freshmen_examinees'));
-            const existingDates = examineesSnapshot.docs.map(doc => doc.data().examDate);
+            const existingDates = examineesSnapshot.docs
+                .map(doc => doc.data().examDate)
+                .filter(date => {
+                    const examDate = new Date(date);
+                    return examDate >= currentDate; // Only include non-past dates
+                });
             
             if (existingDates.length > 0) {
                 // If dates exist, only allow selection of dates that already have examinees
