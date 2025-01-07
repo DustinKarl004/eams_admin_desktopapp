@@ -317,6 +317,8 @@
         const form = document.getElementById('questionUpdateForm');
         const successAlert = document.getElementById('successAlert');
         const errorAlert = document.getElementById('errorAlert');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
 
         // Load subjects from Firestore
         async function loadSubjects() {
@@ -362,6 +364,22 @@
             return isValid;
         }
 
+        function validateForm() {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                if (input.required && !input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            return isValid;
+        }
+
         fetchButton.addEventListener('click', async () => {
             if (!validateInputs()) {
                 showAlert('error', 'Please fill in all required fields correctly');
@@ -395,6 +413,11 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            if (!validateForm()) {
+                showAlert('error', 'Please fill in all required fields');
+                return;
+            }
+
             const subject = subjectSelect.value;
             const questionNumber = questionNumberInput.value;
             const questionData = {
@@ -430,6 +453,13 @@
 
         // Clear validation on input change
         [subjectSelect, questionNumberInput].forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.remove('is-invalid');
+            });
+        });
+
+        // Clear validation on form input change
+        form.querySelectorAll('input, select, textarea').forEach(input => {
             input.addEventListener('input', () => {
                 input.classList.remove('is-invalid');
             });

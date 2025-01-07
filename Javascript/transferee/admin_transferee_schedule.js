@@ -100,10 +100,11 @@ async function populateIdSelect() {
         idSelect.appendChild(montalbamGroup);
     }
 
-    // Set min date to today
+    // Set min date to tomorrow
     const examDateInput = document.getElementById('examDate');
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1); // Set to tomorrow
+    const formattedDate = tomorrow.toISOString().split('T')[0];
     examDateInput.min = formattedDate;
 
     // Handle date selection
@@ -111,14 +112,16 @@ async function populateIdSelect() {
         const selectedDate = examDateInput.value;
         saveExamineeBtn.disabled = true; // Disable button by default
         
-        // Check if selected date is not past
+        // Check if selected date is not today or past
         const selectedDateTime = new Date(selectedDate);
         const currentDate = new Date();
         currentDate.setHours(0,0,0,0);
+        const tomorrowDate = new Date(currentDate);
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
 
-        if (selectedDateTime < currentDate) {
+        if (selectedDateTime <= currentDate) {
             examDateInput.style.backgroundColor = '#ffebee';
-            showAlert('Cannot select past dates. Please select a current or future date.');
+            showAlert('Please select a future date (starting from tomorrow).');
             examDateInput.value = '';
             return;
         }
@@ -126,7 +129,7 @@ async function populateIdSelect() {
         const isDateFull = await checkIfDateIsFull(selectedDate);
         if (isDateFull) {
             examDateInput.style.backgroundColor = '#ffebee';
-            showAlert('This date has reached the maximum number of examinees (8 examinees). Please select another date.');
+            showAlert('This date has reached the maximum number of examinees (4 examinees). Please select another date.');
             examDateInput.value = '';
         } else {
             // Check if there are any existing exam dates
@@ -135,7 +138,7 @@ async function populateIdSelect() {
                 .map(doc => doc.data().examDate)
                 .filter(date => {
                     const examDate = new Date(date);
-                    return examDate >= currentDate; // Only include non-past dates
+                    return examDate >= tomorrowDate; // Only include future dates
                 });
             
             if (existingDates.length > 0) {
@@ -183,7 +186,7 @@ function checkIfHasHonors(data) {
 async function checkIfDateIsFull(date) {
     const examineesSnapshot = await getDocs(collection(db, 'transferee_examinees'));
     const examineesOnDate = examineesSnapshot.docs.filter(doc => doc.data().examDate === date);
-    return examineesOnDate.length >= 8; // 8 examinees per day limit (2 per batch * 4 batches)
+    return examineesOnDate.length >= 4; // 4 examinees per day limit (1 per batch * 4 batches)
 }
 
 async function getNextAvailableBatch(selectedDate) {
@@ -222,8 +225,8 @@ async function getNextAvailableBatch(selectedDate) {
             examinee.room === batchSchedules[i].room
         );
         
-        // If batch has less than 2 examinees, it's available
-        if (examineesInBatch.length < 2) {
+        // If batch has less than 1 examinee, it's available
+        if (examineesInBatch.length < 1) {
             // If this time slot is already in use, use its existing batch number
             const existingBatchForTimeSlot = examineesOnDate.find(e => 
                 e.examStartTime === batchSchedules[i].startTime && 
@@ -350,7 +353,7 @@ saveExamineeBtn.addEventListener('click', async () => {
                      console.log('Schedule notification email sent successfully:', response);
                  }, function(error) {
                      console.error('Schedule notification email failed:', error);
-                 });
+                 }); 
 
             examineeModal.hide();
             fetchExaminees();

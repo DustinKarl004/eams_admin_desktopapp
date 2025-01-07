@@ -103,7 +103,7 @@ import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/fir
           <div class="mt-3">
               <button 
                   class="${buttonClass}"
-                  onclick="confirmDocuments('${examinee.email}')"
+                  onclick="confirmDocuments('${examinee.email}', '${examinee.fullName}')"
                   ${buttonDisabled}
               >
                   ${buttonText}
@@ -113,9 +113,8 @@ import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/fir
       `;
   }
 
-/*************  ✨ Codeium Command 🌟  *************/
   // Confirm documents function
-  window.confirmDocuments = async function(email) {
+  window.confirmDocuments = async function(email, fullName) {
       try {
           console.log(`Confirming documents for ${email}`);
           const docRef = doc(db, 'transferee_stepfour_upload_documents', email);
@@ -124,6 +123,20 @@ import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/fir
           });
           
           console.log(`Confirmed documents for ${email}`);
+
+          // Send email notification
+          const templateParams = {
+              to_email: email,
+              to_name: fullName,
+              message: 'Your uploaded documents have been confirmed. Please wait for further instructions regarding your enrollment process.'
+          };
+
+          emailjs.send('service_3j9xxep', 'template_d3q9lfw', templateParams)
+              .then(function(response) {
+                  console.log('Document confirmation email sent successfully:', response);
+              }, function(error) {
+                  console.error('Document confirmation email failed:', error);
+              });
           
           // Refresh the data to show updated status
           await fetchExamineeData(document.getElementById('searchInput').value);
@@ -133,7 +146,6 @@ import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/fir
           alert("Failed to confirm documents. Please try again.");
       }
   }
-/******  8e17e5a6-521f-4eec-aabd-bb59ddb03e2e  *******/
 
   // Search examinees
   document.getElementById('searchInput').addEventListener('input', (event) => {
@@ -142,4 +154,3 @@ import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/fir
 
   // Initial fetch of examinee data
   fetchExamineeData();
-

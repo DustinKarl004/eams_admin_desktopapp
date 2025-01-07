@@ -273,6 +273,18 @@
                 display: none;
             }
         }
+
+        /* Button loading spinner */
+        .btn-spinner {
+            display: none;
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+            border: 2px solid;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -408,7 +420,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success rounded-pill" onclick="validateAndAddSubject()">Add Subject</button>
+                    <button type="button" class="btn btn-success rounded-pill" id="addSubjectBtn" onclick="validateAndAddSubject()">
+                        <div class="btn-spinner" id="addSpinner"></div>
+                        Add Subject
+                    </button>
                 </div>
             </div>
         </div>
@@ -439,7 +454,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-warning rounded-pill text-dark" onclick="validateAndUpdateSubject()">Update Subject</button>
+                    <button type="button" class="btn btn-warning rounded-pill text-dark" id="updateSubjectBtn" onclick="validateAndUpdateSubject()">
+                        <div class="btn-spinner" id="updateSpinner"></div>
+                        Update Subject
+                    </button>
                 </div>
             </div>
         </div>
@@ -455,6 +473,10 @@
         const errorAlert = document.getElementById('errorAlert');
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
+        const addSpinner = document.getElementById('addSpinner');
+        const updateSpinner = document.getElementById('updateSpinner');
+        const addSubjectBtn = document.getElementById('addSubjectBtn');
+        const updateSubjectBtn = document.getElementById('updateSubjectBtn');
 
         function showLoading() {
             loadingOverlay.style.display = 'flex';
@@ -462,6 +484,16 @@
 
         function hideLoading() {
             loadingOverlay.style.display = 'none';
+        }
+
+        function showButtonLoading(button, spinner) {
+            button.disabled = true;
+            spinner.style.display = 'inline-block';
+        }
+
+        function hideButtonLoading(button, spinner) {
+            button.disabled = false;
+            spinner.style.display = 'none';
         }
 
         function showAlert(type, message) {
@@ -489,6 +521,7 @@
         };
 
         window.addSubject = async function() {
+            showButtonLoading(addSubjectBtn, addSpinner);
             const name = document.getElementById('subjectName').value;
             const description = document.getElementById('subjectDescription').value;
 
@@ -505,6 +538,8 @@
             } catch (error) {
                 console.error("Error adding subject: ", error);
                 showAlert('error', 'Error adding subject');
+            } finally {
+                hideButtonLoading(addSubjectBtn, addSpinner);
             }
         };
 
@@ -530,6 +565,7 @@
         };
 
         window.updateSubject = async function() {
+            showButtonLoading(updateSubjectBtn, updateSpinner);
             const id = document.getElementById('editSubjectId').value;
             const name = document.getElementById('editSubjectName').value;
             const description = document.getElementById('editSubjectDescription').value;
@@ -546,6 +582,8 @@
             } catch (error) {
                 console.error("Error updating subject: ", error);
                 showAlert('error', 'Error updating subject');
+            } finally {
+                hideButtonLoading(updateSubjectBtn, updateSpinner);
             }
         };
 

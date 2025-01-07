@@ -463,6 +463,16 @@ function showDeleteConfirmModal(id, email) {
 
 async function deleteResult(id, email) {
     try {
+        // Check if user has uploaded documents in step four
+        const uploadDocRef = doc(db, 'freshmen_stepfour_upload_documents', email);
+        const uploadDocSnap = await getDoc(uploadDocRef);
+        
+        if (uploadDocSnap.exists()) {
+            deleteConfirmModal.hide();
+            showAlert('Cannot delete result - user has already uploaded documents in Step 4.');
+            return;
+        }
+ 
         // Delete the result document
         const resultRef = doc(db, 'freshmen_examinees_result', id);
         await deleteDoc(resultRef);

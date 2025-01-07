@@ -189,7 +189,7 @@ saveApprovedApplicantBtn.addEventListener('click', async () => {
                 dateApproved: serverTimestamp()
             });
 
-            // Store notification in Notifications collection
+           // Store notification in Notifications collection
             const notificationRef = doc(db, 'Notifications', email);
             const notificationSnap = await getDoc(notificationRef);
             
@@ -223,7 +223,7 @@ saveApprovedApplicantBtn.addEventListener('click', async () => {
                     console.log('Email sent successfully:', response);
                 }, function(error) {
                     console.error('Email send failed:', error);
-                });
+                }); 
 
             approvedApplicantModal.hide();
             fetchApprovedApplicants();
