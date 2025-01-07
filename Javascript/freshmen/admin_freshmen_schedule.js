@@ -126,7 +126,7 @@ async function populateIdSelect() {
         const isDateFull = await checkIfDateIsFull(selectedDate);
         if (isDateFull) {
             examDateInput.style.backgroundColor = '#ffebee';
-            showAlert('This date has reached the maximum number of examinees (4 batches). Please select another date.');
+            showAlert('This date has reached the maximum number of examinees (8 examinees). Please select another date.');
             examDateInput.value = '';
         } else {
             // Check if there are any existing exam dates
@@ -174,13 +174,16 @@ function checkIfFromMontalban(data) {
 
 function checkIfHasHonors(data) {
     const educationInfo = data.education || {};
-    return educationInfo.hasHonors === true;
+    return educationInfo.senior_high_honors && 
+           educationInfo.senior_high_honors.toLowerCase() !== 'none' &&
+           educationInfo.senior_high_honors.toLowerCase() !== 'n/a' &&
+           educationInfo.senior_high_honors.trim() !== '';
 }
 
 async function checkIfDateIsFull(date) {
     const examineesSnapshot = await getDocs(collection(db, 'freshmen_examinees'));
     const examineesOnDate = examineesSnapshot.docs.filter(doc => doc.data().examDate === date);
-    return examineesOnDate.length >= 4; // 4 batches per day limit
+    return examineesOnDate.length >= 8; // 8 examinees per day limit (2 per batch * 4 batches)
 }
 
 async function getNextAvailableBatch(selectedDate) {
@@ -189,15 +192,50 @@ async function getNextAvailableBatch(selectedDate) {
         .filter(doc => doc.data().examDate === selectedDate)
         .map(doc => doc.data());
 
-    // Find first available batch
+    // Get the highest batch number from past dates
+    const pastExaminees = examineesSnapshot.docs
+        .filter(doc => {
+            const examDate = new Date(doc.data().examDate);
+            const selectedDateTime = new Date(selectedDate);
+            return examDate < selectedDateTime;
+        })
+        .map(doc => doc.data());
+
+    let highestPastBatch = 0;
+    if (pastExaminees.length > 0) {
+        highestPastBatch = Math.max(...pastExaminees.map(e => e.batchNumber));
+    }
+
+    // Get current date's highest batch number
+    let currentDateHighestBatch = 0;
+    if (examineesOnDate.length > 0) {
+        currentDateHighestBatch = Math.max(...examineesOnDate.map(e => e.batchNumber));
+    }
+
+    // If there are past batches, start new numbering from the highest past batch
+    const startingBatchNumber = highestPastBatch > 0 ? highestPastBatch + 1 : 1;
+
+    // Find first available batch time slot
     for (let i = 0; i < batchSchedules.length; i++) {
-        const batchInUse = examineesOnDate.some(examinee => 
+        const examineesInBatch = examineesOnDate.filter(examinee => 
             examinee.examStartTime === batchSchedules[i].startTime && 
             examinee.room === batchSchedules[i].room
         );
-        if (!batchInUse) {
+        
+        // If batch has less than 2 examinees, it's available
+        if (examineesInBatch.length < 2) {
+            // If this time slot is already in use, use its existing batch number
+            const existingBatchForTimeSlot = examineesOnDate.find(e => 
+                e.examStartTime === batchSchedules[i].startTime && 
+                e.room === batchSchedules[i].room
+            );
+
+            const batchNumber = existingBatchForTimeSlot ? 
+                existingBatchForTimeSlot.batchNumber : 
+                startingBatchNumber + i;
+
             return {
-                batchNumber: i + 1,
+                batchNumber,
                 ...batchSchedules[i]
             };
         }
@@ -278,41 +316,41 @@ saveExamineeBtn.addEventListener('click', async () => {
                 qrCode: qrCodeDataUrl
             });
             
-            // Store notification in Notifications collection
-            const notificationRef = doc(db, 'Notifications', email);
-            const notificationSnap = await getDoc(notificationRef);
+             // Store notification in Notifications collection
+             const notificationRef = doc(db, 'Notifications', email);
+             const notificationSnap = await getDoc(notificationRef);
             
             const newNotification = {
-                category: 'Schedule',
-                message: 'Your entrance exam schedule has been set. Please check your schedule details by clicking this notification.',
-                timestamp: new Date().toISOString(),
-                status: 'unread'
-            };
+                 category: 'Schedule',
+                 message: 'Your entrance exam schedule has been set. Please check your schedule details by clicking this notification.',
+                 timestamp: new Date().toISOString(),
+                 status: 'unread'
+             };
 
-            if (notificationSnap.exists()) {
-                const currentList = notificationSnap.data().list || [];
-                await setDoc(notificationRef, {
-                    list: [...currentList, newNotification]
-                }, { merge: true });
-            } else {
-                await setDoc(notificationRef, {
-                    list: [newNotification]
-                });
-            }
+             if (notificationSnap.exists()) {
+                 const currentList = notificationSnap.data().list || [];
+                 await setDoc(notificationRef, {
+                     list: [...currentList, newNotification]
+                 }, { merge: true });
+             } else {
+                 await setDoc(notificationRef, {
+                     list: [newNotification]
+                 });
+             }
 
-            // Send email notification
-            const templateParams = {
-                to_email: email,
-                to_name: fullName,
-                message: 'Your entrance exam schedule is now available. Please open your mobile application and check the notification icon to view your schedule details.'
-            };
+             // Send email notification
+             const templateParams = {
+                 to_email: email,
+                 to_name: fullName,
+                 message: 'Your entrance exam schedule is now available. Please open your mobile application and check the notification icon to view your schedule details.'
+             };
 
-            emailjs.send('service_3j9xxep', 'template_d3q9lfw', templateParams)
-                .then(function(response) {
-                    console.log('Schedule notification email sent successfully:', response);
-                }, function(error) {
-                    console.error('Schedule notification email failed:', error);
-                });
+             emailjs.send('service_3j9xxep', 'template_d3q9lfw', templateParams)
+                 .then(function(response) {
+                     console.log('Schedule notification email sent successfully:', response);
+                 }, function(error) {
+                     console.error('Schedule notification email failed:', error);
+                 });
 
             examineeModal.hide();
             fetchExaminees();

@@ -1,5 +1,5 @@
 import { db } from '../firebase_config.js';
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   // Variables
   let examinees = [];
@@ -62,6 +62,7 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/f
                   </h4>
                   <p class="applicant-info"><i class="fas fa-envelope"></i>Email: ${examinee.email}</p>
                   ${renderUploadedDocuments(examinee.uploadInfo)}
+                  ${renderConfirmButton(examinee)}
               </div>
           `;
           examineesContainer.appendChild(card);
@@ -87,6 +88,52 @@ import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/f
       `).join('')}
       `;
   }
+
+  function renderConfirmButton(examinee) {
+      if (!examinee.uploadInfo || Object.keys(examinee.uploadInfo).length === 0) {
+          return '';
+      }
+
+      const isConfirmed = examinee.uploadInfo.confirmed;
+      const buttonClass = isConfirmed ? 'confirm-btn confirmed' : 'confirm-btn';
+      const buttonText = isConfirmed ? 'Confirmed' : 'Confirm Documents';
+      const buttonDisabled = isConfirmed ? 'disabled' : '';
+
+      return `
+          <div class="mt-3">
+              <button 
+                  class="${buttonClass}"
+                  onclick="confirmDocuments('${examinee.email}')"
+                  ${buttonDisabled}
+              >
+                  ${buttonText}
+              </button>
+              ${isConfirmed ? '<p class="confirmed-status">Documents have been confirmed</p>' : ''}
+          </div>
+      `;
+  }
+
+/*************  ✨ Codeium Command 🌟  *************/
+  // Confirm documents function
+  window.confirmDocuments = async function(email) {
+      try {
+          console.log(`Confirming documents for ${email}`);
+          const docRef = doc(db, 'transferee_stepfour_upload_documents', email);
+          await updateDoc(docRef, {
+              confirmed: true
+          });
+          
+          console.log(`Confirmed documents for ${email}`);
+          
+          // Refresh the data to show updated status
+          await fetchExamineeData(document.getElementById('searchInput').value);
+          
+      } catch (error) {
+          console.error("Error confirming documents:", error);
+          alert("Failed to confirm documents. Please try again.");
+      }
+  }
+/******  8e17e5a6-521f-4eec-aabd-bb59ddb03e2e  *******/
 
   // Search examinees
   document.getElementById('searchInput').addEventListener('input', (event) => {
